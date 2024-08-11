@@ -1,0 +1,52 @@
+﻿@model ItemHub.Models.RegisterModel
+
+
+<div class="text-center">
+
+<h2>Регистрация</h2>
+
+    <form asp-action="Register" asp-controller="Account" asp-anti-forgery="true" method="post">
+        <div class="validation" asp-validation-summary="ModelOnly"></div>
+        <div>
+            <div>
+                <label asp-for="Login">Логин:</label><br />
+                <input type="text" asp-for="Login" /><br />
+                @Html.ValidationMessageFor(x => x.Login)
+            </div>
+            <div>
+                <label asp-for="Password">Пароль:</label><br />
+                <input asp-for="Password" /><br />
+                @Html.ValidationMessageFor(x => x.Password)
+            </div>
+            <div>
+                <label asp-for="ConfirmPassword">Повторите пароль:</label><br />
+                <input asp-for="ConfirmPassword" /><br />
+                @Html.ValidationMessageFor(x => x.ConfirmPassword)
+            </div>
+            <div>
+                <label asp-for="Email">Email:</label><br />
+                <input type="text" asp-for="Email" /><br />
+                @Html.ValidationMessageFor(x => x.Email)
+            </div>
+            <div>
+                <label asp-for="Name">Имя:</label><br />
+                <input type="text" asp-for="Name" /><br />
+                @Html.ValidationMessageFor(x => x.Name)
+            </div>
+            <div>
+                <label asp-for="Age">Возраст:</label><br />
+                <input type="number" asp-for="Age" /><br />
+                @Html.ValidationMessageFor(x => x.Age)
+            </div>
+            <div>
+                <label asp-for="Seller">Вы будете продавать?</label><br />
+                <input type="checkbox" asp-for="Seller" value="true" />
+            </div>
+            <div>
+                <br />
+                <input type="submit" value="Регистрация" />
+            </div>
+        </div>
+    </form>
+    <a asp-action="Login" asp-controller="Account">Войти</a>
+</div>
