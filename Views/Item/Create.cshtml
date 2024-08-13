@@ -1,0 +1,29 @@
+﻿@using ItemHub.Models.OnlyItem
+@model ItemModel
+
+<div class="text-center">
+
+<h2>Выберите файл для загрузки</h2>
+
+    <form asp-action="Create" asp-controller="Item" method="post" enctype="multipart/form-data">
+        <div class="validation" asp-validation-summary="ModelOnly"></div>
+        <div>
+            <div>
+                <label asp-for="Title">Название:</label><br />
+                <input type="text" asp-for="Title" /><br />
+                @Html.ValidationMessageFor(x => x.Title)
+            </div>
+            <div>
+                <label asp-for="Description">Описание:</label><br />
+                <input asp-for="Description" /><br />
+            </div>
+
+            <input asp-for="Images" type="file" name="Images" accept="image/jpg,image/jpeg,image/png" min="1" max="10" multiple /><br>
+            <div>
+                <label asp-for="Price">Цена:</label><br />
+                <input asp-for="Price" /><br />
+            </div>
+        </div>
+        <input type="submit" value="Загрузить" />
+    </form>
+</div>

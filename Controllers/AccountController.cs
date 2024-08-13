@@ -3,19 +3,20 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using ItemHub.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Xml.Linq;
 using System.Data;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
+using ItemHub.Models.Auth;
+using ItemHub.Models.User;
 
 namespace ItemHub.Controllers
 {
     public class AccountController : Controller
     {
-        private UserContext db;
+        private readonly UserContext db;
         public AccountController(UserContext context)
         {
             db = context;
@@ -34,7 +35,7 @@ namespace ItemHub.Controllers
         public async Task<IActionResult> Register(RegisterModel model)
         {
             if (ModelState.IsValid) 
-            { 
+            {
                 User? Check;
                 Check = await db.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
                 if (Check != null)
@@ -99,6 +100,7 @@ namespace ItemHub.Controllers
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Name, ClaimValueTypes.String),
+                new Claim(ClaimTypes.Actor, user.Login, ClaimValueTypes.String),
                 new Claim(ClaimTypes.Email, user.Email, ClaimValueTypes.Email),
                 new Claim("Age", user.Age.ToString(), ClaimValueTypes.Integer)
             };

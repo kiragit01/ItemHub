@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Data;
 
-namespace ItemHub.Models
+namespace ItemHub.Models.Auth
 {
     public class RegisterModel
     {

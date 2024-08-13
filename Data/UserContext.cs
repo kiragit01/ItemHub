@@ -1,4 +1,5 @@
-﻿using ItemHub.Models;
+﻿using ItemHub.Models.OnlyItem;
+using ItemHub.Models.User;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 

@@ -1,4 +1,4 @@
-﻿namespace ItemHub.Models
+﻿namespace ItemHub.Models.User
 {
     public class UserRoles
     {

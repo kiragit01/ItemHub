@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
+using ItemHub.Models.OnlyItem;
 
-namespace ItemHub.Models
+namespace ItemHub.Models.User
 {
     public class User
     {
@@ -14,6 +14,8 @@ namespace ItemHub.Models
         public int Age { get; set; }
 
         public List<string> Roles { get; set; } = new();
+        public List<Item> Items { get; set; } = new();
+
         public User(string login, string password, string name, string email, int age)
         {
             Id = Guid.NewGuid();

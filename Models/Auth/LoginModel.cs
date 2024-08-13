@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ItemHub.Models
+namespace ItemHub.Models.Auth
 {
     public class LoginModel
     {
