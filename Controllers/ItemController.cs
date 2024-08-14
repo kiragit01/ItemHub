@@ -18,7 +18,7 @@ namespace ItemHub.Controllers
     {
 
         private readonly UserContext db;
-        private string? UserLogin;
+        //private User? user;
         public ItemController(UserContext Dbcontext)
         {
             db = Dbcontext;
@@ -44,7 +44,6 @@ namespace ItemHub.Controllers
         [Route("/1")]
         public ActionResult Create()
         {
-            UserLogin = User.Claims.FirstOrDefault(f => f.Type == ClaimTypes.Actor).Value.ToString();
             return View();
         }
 
@@ -57,21 +56,38 @@ namespace ItemHub.Controllers
         {
             if(ModelState.IsValid)
             {
-                List<string> PathImages = UploadImages(model.Images).Result;
+                var userLogin = User.Claims.FirstOrDefault(f => f.Type == ClaimTypes.NameIdentifier).Value;
+                if (userLogin == null)  return Unauthorized();
+                var user = await db.Users
+                           .Include(u => u.Items)
+                           .FirstOrDefaultAsync(o => o.Login == userLogin);
+                if (user == null)   return NotFound();
+
+                List<string> PathImages = await UploadImages(model.Images, user);
+
                 Item item = new(model.Title, model.Description, PathImages, model.Price);
-                db.Items.Add(item);
-                await db.SaveChangesAsync();
+
+                user.Items.Add(item);
+                await db.Items.AddAsync(item);
+                try
+                {
+                    await db.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    return Conflict("Item не сохраняется в таблице из-за чего не может быть связан с пользователем");
+                }
             }
-            return View();
+            return RedirectToAction("Index", "Home");
         }
 
 
-        public async Task<List<string>> UploadImages(IFormFileCollection files)
+        public async Task<List<string>> UploadImages(IFormFileCollection files, User user)
         {
-            List<string> PathImages = new();
+            var pathImages = new List<string>();
             if (files != null)
             {
-                var uploadPath = $"{Directory.GetCurrentDirectory()}/wwwroot/img/{UserLogin}";
+                var uploadPath = Path.Combine($"wwwroot/images/{user.Login}");
                 // создаем папку для хранения файлов
                 Directory.CreateDirectory(uploadPath);
 
@@ -80,24 +96,27 @@ namespace ItemHub.Controllers
                     var type = "." + file.ContentType.Split("/")[1];
                     // путь к файлу
                     string fullPath = $"{uploadPath}/{RandomString(8) + type}";
-                    PathImages.Add(fullPath);
+                    pathImages.Add(fullPath);
                     // сохраняем файл
                     using (var fileStream = new FileStream(fullPath, FileMode.Create))
                     {
                         await file.CopyToAsync(fileStream);
                     }
                 }
-                return PathImages;
+                return pathImages;
             }
             else
             {
-                return [$"{Directory.GetCurrentDirectory()}/wwwroot/img/NoImage.png"];
+                return [Path.Combine($"wwwroot/images/NoImage.png")];
             }
 
         }
+            //else
+            //{
+            //    return [$"{Directory.GetCurrentDirectory()}/wwwroot/img/NoImage.png"];
+            //}
 
-
-
+        public string test;
 
 
         // GET: ItemController/Edit/5

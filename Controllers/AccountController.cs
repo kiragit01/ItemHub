@@ -100,7 +100,7 @@ namespace ItemHub.Controllers
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Name, ClaimValueTypes.String),
-                new Claim(ClaimTypes.Actor, user.Login, ClaimValueTypes.String),
+                new Claim(ClaimTypes.NameIdentifier, user.Login, ClaimValueTypes.String),
                 new Claim(ClaimTypes.Email, user.Email, ClaimValueTypes.Email),
                 new Claim("Age", user.Age.ToString(), ClaimValueTypes.Integer)
             };

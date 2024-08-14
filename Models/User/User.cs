@@ -32,5 +32,7 @@ namespace ItemHub.Models.User
 
         public void AddRoles(string[] roles) => Roles.AddRange(roles);
 
+        public void AddItems(Item item) => Items.Add(item);
+
     }
 }
