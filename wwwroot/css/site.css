@@ -25,3 +25,11 @@ body {
     font-weight: bold;
     color: brown;
 }
+
+.exmpl {
+    height: 200px;
+}
+.exmpl img {
+    object-fit: cover;
+    height: 100%;
+}

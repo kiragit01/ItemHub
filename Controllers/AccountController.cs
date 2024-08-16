@@ -91,8 +91,7 @@ namespace ItemHub.Controllers
             return View();
         }
 
-
-
+        
 
         private async Task Authenticate(User user)
         {
@@ -121,5 +120,7 @@ namespace ItemHub.Controllers
             return RedirectToAction("Login", "Account");
         }
 
+
+        public IActionResult AccessDenied() => RedirectToAction("Index", "Home");
     }
 }

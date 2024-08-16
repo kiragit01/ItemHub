@@ -10,7 +10,7 @@
         <div>
             <div>
                 <label asp-for="Title">Название:</label><br />
-                <input type="text" asp-for="Title" /><br />
+                <input type="text" asp-for="Title" name="Title"/><br />
                 @Html.ValidationMessageFor(x => x.Title)
             </div>
             <div>
@@ -22,6 +22,7 @@
             <div>
                 <label asp-for="Price">Цена:</label><br />
                 <input asp-for="Price" /><br />
+                @Html.ValidationMessageFor(x => x.Price)
             </div>
         </div>
         <input type="submit" value="Загрузить" />

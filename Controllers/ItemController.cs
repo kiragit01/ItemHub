@@ -40,16 +40,21 @@ namespace ItemHub.Controllers
         }
         #endregion
 
+
+
+        public async Task<List<Item>> ListItems() => await db.Items.ToListAsync();
+
+
+
         // GET: ItemController/Create
-        [Route("/1")]
+        [Route("/create")]
         public ActionResult Create()
         {
             return View();
         }
 
-
         // POST: ItemController/Create
-        [Route("/1")]
+        [Route("/create")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(ItemModel model)
@@ -78,25 +83,30 @@ namespace ItemHub.Controllers
                     return Conflict("Item не сохраняется в таблице из-за чего не может быть связан с пользователем");
                 }
             }
+            else
+            {
+                return View();
+            }
             return RedirectToAction("Index", "Home");
         }
 
-
+        [NonAction]
         public async Task<List<string>> UploadImages(IFormFileCollection files, User user)
         {
             var pathImages = new List<string>();
             if (files != null)
             {
-                var uploadPath = Path.Combine($"wwwroot/images/{user.Login}");
+                var uploadPath = $"images/{user.Login}";
                 // создаем папку для хранения файлов
-                Directory.CreateDirectory(uploadPath);
+                Directory.CreateDirectory("wwwroot/"+uploadPath);
 
                 foreach (var file in files)
                 {
                     var type = "." + file.ContentType.Split("/")[1];
                     // путь к файлу
-                    string fullPath = $"{uploadPath}/{RandomString(8) + type}";
-                    pathImages.Add(fullPath);
+                    string pathForList = $"{uploadPath}/{RandomString(8) + type}";
+                    string fullPath = $"wwwroot/{pathForList}";
+                    pathImages.Add(pathForList);
                     // сохраняем файл
                     using (var fileStream = new FileStream(fullPath, FileMode.Create))
                     {
@@ -107,7 +117,7 @@ namespace ItemHub.Controllers
             }
             else
             {
-                return [Path.Combine($"wwwroot/images/NoImage.png")];
+                return [$"images/NoImage.png"];
             }
 
         }
@@ -116,7 +126,6 @@ namespace ItemHub.Controllers
             //    return [$"{Directory.GetCurrentDirectory()}/wwwroot/img/NoImage.png"];
             //}
 
-        public string test;
 
 
         // GET: ItemController/Edit/5
