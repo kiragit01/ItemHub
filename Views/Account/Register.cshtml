@@ -6,48 +6,96 @@
 
 <h2>Регистрация</h2>
 
-    <form asp-action="Register" asp-controller="Account" asp-anti-forgery="true" method="post">
+    <form asp-action="Register" asp-controller="Account" asp-anti-forgery="true" method="post" class="row mt-3 needs-validation" novalidate>
         <div class="validation" asp-validation-summary="ModelOnly"></div>
-        <div>
+        <div class="col-sm-3 m-auto">
             <div>
-                <label asp-for="Login">Логин:</label><br />
-                <input type="text" asp-for="Login" /><br />
+                <label class="form-label" for="validationCustomUsername">Username</label>
+                <div class="input-group has-validation">
+                    <div class="input-group-text">@@</div>
+                    <input type="text" asp-for="Login" class="form-control" id="validationCustomUsername" placeholder="Username" required>
+                    <div class="invalid-feedback">
+                        Заполните логин.
+                    </div>
+                </div>
                 @Html.ValidationMessageFor(x => x.Login)
+                
             </div>
             <div>
                 <label asp-for="Password">Пароль:</label><br />
-                <input asp-for="Password" /><br />
+                <input type="password" asp-for="Password" class="form-control" required />
+                <div class="invalid-feedback">
+                    Введите пароль.
+                </div>
                 @Html.ValidationMessageFor(x => x.Password)
             </div>
             <div>
                 <label asp-for="ConfirmPassword">Повторите пароль:</label><br />
-                <input asp-for="ConfirmPassword" /><br />
+                <input type="password" asp-for="ConfirmPassword" class="form-control" required />
+                <div class="invalid-feedback">
+                    Повторите пароль.
+                </div>
                 @Html.ValidationMessageFor(x => x.ConfirmPassword)
             </div>
             <div>
                 <label asp-for="Email">Email:</label><br />
-                <input type="text" asp-for="Email" /><br />
+                <input type="email" asp-for="Email" class="form-control" required />
+                <div class="invalid-feedback">
+                    Введите почту.
+                </div>
                 @Html.ValidationMessageFor(x => x.Email)
             </div>
             <div>
                 <label asp-for="Name">Имя:</label><br />
-                <input type="text" asp-for="Name" /><br />
+                <input type="text" asp-for="Name" class="form-control" required />
+                <div class="invalid-feedback">
+                    Введите имя.
+                </div>
                 @Html.ValidationMessageFor(x => x.Name)
             </div>
             <div>
                 <label asp-for="Age">Возраст:</label><br />
-                <input type="number" asp-for="Age" /><br />
+                <input type="number" asp-for="Age" class="form-control" required />
+                <div class="invalid-feedback">
+                    Введите возраст.
+                </div>
                 @Html.ValidationMessageFor(x => x.Age)
             </div>
             <div>
-                <label asp-for="Seller">Вы будете продавать?</label><br />
-                <input type="checkbox" asp-for="Seller" value="true" />
+                <div class="form-check m-auto">
+                    <input asp-for="Seller" value="true" class="form-check-input" type="checkbox" id="gridCheck">
+                    <label class="form-check-label" for="gridCheck">
+                        Вы будете продавать?
+                    </label>
+                </div>
             </div>
             <div>
                 <br />
-                <input type="submit" value="Регистрация" />
+                <input class="btn btn-primary" type="submit" value="Регистрация" />
             </div>
         </div>
     </form>
     <a asp-action="Login" asp-controller="Account">Войти</a>
 </div>
+<script>
+    // Example starter JavaScript for disabling form submissions if there are invalid fields
+    (function () {
+        'use strict'
+
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.querySelectorAll('.needs-validation')
+
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+</script>

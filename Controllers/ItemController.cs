@@ -13,12 +13,10 @@ using System.Security.Claims;
 
 namespace ItemHub.Controllers
 {
-    [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
     public class ItemController : Controller
     {
 
         private readonly UserContext db;
-        //private User? user;
         public ItemController(UserContext Dbcontext)
         {
             db = Dbcontext;
@@ -26,28 +24,22 @@ namespace ItemHub.Controllers
 
 
 
-        #region Temp
         // GET: ItemController
-        public ActionResult Index()
+        [Route("/item")]
+        public async Task<ActionResult> ViewItem(Guid id)
         {
+            Item? item = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
+            if (item == null) return BadRequest("Что-то пошло не так :(");
+            ViewBag.Item = item;
             return View();
         }
 
-        // GET: ItemController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-        #endregion
-
-
-
-        public async Task<List<Item>> ListItems() => await db.Items.ToListAsync();
 
 
 
         // GET: ItemController/Create
         [Route("/create")]
+        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
         public ActionResult Create()
         {
             return View();
@@ -55,6 +47,7 @@ namespace ItemHub.Controllers
 
         // POST: ItemController/Create
         [Route("/create")]
+        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(ItemModel model)
@@ -91,7 +84,7 @@ namespace ItemHub.Controllers
         }
 
         [NonAction]
-        public async Task<List<string>> UploadImages(IFormFileCollection files, User user)
+        private async Task<List<string>> UploadImages(IFormFileCollection files, User user)
         {
             var pathImages = new List<string>();
             if (files != null)
@@ -121,27 +114,25 @@ namespace ItemHub.Controllers
             }
 
         }
-            //else
-            //{
-            //    return [$"{Directory.GetCurrentDirectory()}/wwwroot/img/NoImage.png"];
-            //}
 
 
 
         // GET: ItemController/Edit/5
+        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
         public ActionResult Edit(int id)
         {
             return View();
         }
 
         // POST: ItemController/Edit/5
+        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(int id, IFormCollection collection)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index", "Home");
             }
             catch
             {
@@ -150,19 +141,21 @@ namespace ItemHub.Controllers
         }
 
         // GET: ItemController/Delete/5
+        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
         public ActionResult Delete(int id)
         {
             return View();
         }
 
         // POST: ItemController/Delete/5
+        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id, IFormCollection collection)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index", "Home");
             }
             catch
             {
@@ -172,7 +165,7 @@ namespace ItemHub.Controllers
 
         //Генератор рандомного набора символов
         private readonly static Random random = new();
-        public static string RandomString(int length)
+        private static string RandomString(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             return new string(Enumerable.Repeat(chars, length)

@@ -14,57 +14,62 @@
     @foreach (var item in ViewBag.Items)
     {
         <div class="card mb-3 col-md-8 m-auto">
-          <div class="row g-0">
-            <div class="col exmpl">
-                @if(item.PathImages.Count == 1)
-                {
-                    <img src="@item.PathImages[0]" class="d-block w-100" alt="не пашет" />
-                }
-                else
-                {
-                    <div id="carouselExampleIndicators-@item.Id" class="carousel slide" data-bs-ride="true">
-                        <div class="carousel-indicators">
-                            @for (int i = 0; i < item.PathImages.Count; i++)
-                            {
-                                @if(i == 0)
-                                { 
-                                    <button type="button" data-bs-target="#carouselExampleIndicators-@item.Id" data-bs-slide-to="@i" class="active" aria-current="true" aria-label="Slide @(i+1)"></button>
-                                }
-                                else
-                                {
-                                    <button type="button" data-bs-target="#carouselExampleIndicators-@item.Id" data-bs-slide-to="@i" aria-label="Slide @(i+1)"></button>
-                                }
-                            }
+            <div class="row ">
+                <div class="col">
+                    @if(item.PathImages.Count == 1)
+                    {
+                        <div class="exmpl">
+                            <img src="@item.PathImages[0]" class="d-block w-100" alt="не пашет" />
                         </div>
-                        <div class="carousel-inner">
-                            @for (int i = 0; i < item.PathImages.Count; i++)
-                            {
-                                @if(i == 0)
-                                { 
-                                    <div class="carousel-item active exmpl">
-                                        <img src="@item.PathImages[i]" class="bd-placeholder-img bd-placeholder-img-lg d-block w-100" alt="не пашет" />
-                                    </div>
-                                }
-                                else
+                    }
+                    else
+                    {
+                        <div id="carouselExampleIndicators-@item.Id" class="carousel slide" data-bs-ride="true">
+                            <div class="carousel-indicators">
+                                @for (int i = 0; i < item.PathImages.Count; i++)
                                 {
-                                    <div class="carousel-item exmpl">
-                                        <img src="@item.PathImages[i]" class="bd-placeholder-img bd-placeholder-img-lg d-block w-100" alt="не пашет" />
-                                    </div>
+                                    @if(i == 0)
+                                    { 
+                                        <button type="button" data-bs-target="#carouselExampleIndicators-@item.Id" data-bs-slide-to="@i" class="active" aria-current="true" aria-label="Slide @(i+1)"></button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" data-bs-target="#carouselExampleIndicators-@item.Id" data-bs-slide-to="@i" aria-label="Slide @(i+1)"></button>
+                                    }
                                 }
-                            }
+                            </div>
+                            <div class="carousel-inner">
+                                @for (int i = 0; i < item.PathImages.Count; i++)
+                                {
+                                    @if(i == 0)
+                                    { 
+                                        <div class="carousel-item active exmpl">
+                                            <img src="@item.PathImages[i]" class="bd-placeholder-img bd-placeholder-img-lg d-block w-100" alt="не пашет" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="carousel-item exmpl">
+                                            <img src="@item.PathImages[i]" class="bd-placeholder-img bd-placeholder-img-lg d-block w-100" alt="не пашет" />
+                                        </div>
+                                    }
+                                }
+                            </div>
                         </div>
-                    </div>
-                }
+                    }
+                </div>
+                <div class="col-md-8">
+                    <a href="/Item/ViewItem?id=@item.Id">
+                        <div class="card-body">
+                            <h5 class="card-title">@item.Title</h5>
+                            <p class="card-text">@item.Description</p>
+                            <p class="card-text">@(item.Price)$</p>
+                            <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+                            <p class="card-text"><a asp-controller="Item" asp-action="Edit">Edit</a></p>
+                        </div>
+                    </a>
+                </div>
             </div>
-            <div class="col-md-8">
-              <div class="card-body">
-                <h5 class="card-title">@item.Title</h5>
-                <p class="card-text">@item.Description</p>
-                <p class="card-text">@(item.Price)$</p>
-                <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
-              </div>
-            </div>
-          </div>
         </div>
     }
 </div>
