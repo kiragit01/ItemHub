@@ -1,1 +1,80 @@
-﻿
+﻿@{
+    var item = ViewBag.Item;
+    var pathImages = item.PathImages;
+    ViewBag.Title = item.Title;
+}
+<link rel="stylesheet" href="~/css/slider.css">
+
+<div class="mt-5">
+    <h1 class="display-4 fw-normal">@item.Title</h1>
+</div>
+<hr>
+
+<div class="mt-3 row gx-5">
+    <div class="col-6">
+        @if (pathImages.Count > 1)
+        {
+        <div class="slider">
+            <div class="slider-main">
+                <button class="main-nav prev">&lt;</button>
+                <img id="main-image" src="@pathImages[0]" alt="Main Image">
+                <button class="main-nav next">&gt;</button>
+            </div>
+            <div class="thumbnail-slider">
+                @if (pathImages.Count > 6)
+                {
+                <button class="thumb-nav prev">&lt;</button>
+                <div class="thumbnails">
+                    <div class="thumbs-container">
+                        <!-- Миниатюры изображений -->
+                        @for (int i = 0; i < pathImages.Count; i++)
+                        {
+                            <img class="thumbnail" src="@pathImages[i]" alt="Images_mini @i">
+                        }
+                    </div>
+                </div>
+                <button class="thumb-nav next">&gt;</button>
+                }
+                else
+                {
+                    <button class="thumb-nav prev visually-hidden">&lt;</button>
+                    <div class="thumbnails">
+                        <div class="thumbs-container">
+                            <!-- Миниатюры изображений -->
+                            @for (int i = 0; i < pathImages.Count; i++)
+                            {
+                                <img class="thumbnail" src="@pathImages[i]" alt="Images_mini @i">
+                            }
+                        </div>
+                    </div>
+                    <button class="thumb-nav next visually-hidden">&gt;</button>
+                }
+            </div>
+        </div>
+        }
+        else
+        { 
+            <div class="slider">
+                <div class="slider-main">
+                    <img id="main-image" src="@pathImages[0]" alt="Main Image">
+                </div>
+            </div>
+        }
+    </div>
+    <div class="col">
+        <ul class="list-group h-100">
+            <li class="h3 list-group-item mb-0">Описание: </li>
+            <li class="list-group-item h-100 pe-4">
+                <p>@item.Description</p>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="mt-3 float-end"> 
+    <button  type="button" class="btn btn-success btn-lg">
+        Price:  @(item.Price)$
+    </button>
+</div>
+
+

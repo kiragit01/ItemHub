@@ -13,17 +13,9 @@ using System.Security.Claims;
 
 namespace ItemHub.Controllers
 {
-    public class ItemController : Controller
+    public class ItemController(UserContext db) : Controller
     {
-
-        private readonly UserContext db;
-        public ItemController(UserContext Dbcontext)
-        {
-            db = Dbcontext;
-        }
-
-
-
+        
         // GET: ItemController
         [Route("/item")]
         public async Task<ActionResult> ViewItem(Guid id)
@@ -33,8 +25,6 @@ namespace ItemHub.Controllers
             ViewBag.Item = item;
             return View();
         }
-
-
 
 
         // GET: ItemController/Create
@@ -54,16 +44,17 @@ namespace ItemHub.Controllers
         {
             if(ModelState.IsValid)
             {
-                var userLogin = User.Claims.FirstOrDefault(f => f.Type == ClaimTypes.NameIdentifier).Value;
+                var userLogin = User.Claims.FirstOrDefault(f => f.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (userLogin == null)  return Unauthorized();
                 var user = await db.Users
                            .Include(u => u.Items)
                            .FirstOrDefaultAsync(o => o.Login == userLogin);
                 if (user == null)   return NotFound();
 
-                List<string> PathImages = await UploadImages(model.Images, user);
+                List<string> pathImages = await UploadImages(model.Images, user);
+                if (pathImages == null) throw new ArgumentNullException(nameof(pathImages));
 
-                Item item = new(model.Title, model.Description, PathImages, model.Price);
+                Item item = new(model.Title, model.Description, pathImages, model.Price);
 
                 user.Items.Add(item);
                 await db.Items.AddAsync(item);
@@ -84,7 +75,7 @@ namespace ItemHub.Controllers
         }
 
         [NonAction]
-        private async Task<List<string>> UploadImages(IFormFileCollection files, User user)
+        private async Task<List<string>> UploadImages(IFormFileCollection? files, User user)
         {
             var pathImages = new List<string>();
             if (files != null)
@@ -97,14 +88,12 @@ namespace ItemHub.Controllers
                 {
                     var type = "." + file.ContentType.Split("/")[1];
                     // путь к файлу
-                    string pathForList = $"{uploadPath}/{RandomString(8) + type}";
-                    string fullPath = $"wwwroot/{pathForList}";
+                    var pathForList = $"{uploadPath}/{RandomString(8) + type}";
+                    var fullPath = $"wwwroot/{pathForList}";
                     pathImages.Add(pathForList);
                     // сохраняем файл
-                    using (var fileStream = new FileStream(fullPath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(fileStream);
-                    }
+                    await using var fileStream = new FileStream(fullPath, FileMode.Create);
+                    await file.CopyToAsync(fileStream);
                 }
                 return pathImages;
             }
@@ -164,7 +153,7 @@ namespace ItemHub.Controllers
         }
 
         //Генератор рандомного набора символов
-        private readonly static Random random = new();
+        private static readonly Random random = new();
         private static string RandomString(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

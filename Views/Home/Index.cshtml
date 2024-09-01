@@ -15,7 +15,7 @@
     {
         <div class="card mb-3 col-md-8 m-auto">
             <div class="row ">
-                <div class="col">
+                <div class="col"> 
                     @if(item.PathImages.Count == 1)
                     {
                         <div class="exmpl">
@@ -32,37 +32,50 @@
                                     { 
                                         <button type="button" data-bs-target="#carouselExampleIndicators-@item.Id" data-bs-slide-to="@i" class="active" aria-current="true" aria-label="Slide @(i+1)"></button>
                                     }
-                                    else
+                                    else if (i < 10)
                                     {
                                         <button type="button" data-bs-target="#carouselExampleIndicators-@item.Id" data-bs-slide-to="@i" aria-label="Slide @(i+1)"></button>
                                     }
+                                    else break;
                                 }
                             </div>
                             <div class="carousel-inner">
-                                @for (int i = 0; i < item.PathImages.Count; i++)
+                                <div class="carousel-item active exmpl">
+                                    <img src="@item.PathImages[0]" class="bd-placeholder-img bd-placeholder-img-lg d-block w-100" alt="не пашет"/>
+                                </div>
+                                @for (int i = 1; i < item.PathImages.Count; i++)
                                 {
-                                    @if(i == 0)
-                                    { 
-                                        <div class="carousel-item active exmpl">
-                                            <img src="@item.PathImages[i]" class="bd-placeholder-img bd-placeholder-img-lg d-block w-100" alt="не пашет" />
-                                        </div>
-                                    }
-                                    else
+                                    if (i < 10)
                                     {
                                         <div class="carousel-item exmpl">
-                                            <img src="@item.PathImages[i]" class="bd-placeholder-img bd-placeholder-img-lg d-block w-100" alt="не пашет" />
+                                            <img src="@item.PathImages[i]" class="bd-placeholder-img bd-placeholder-img-lg d-block w-100" alt="не пашет"/>
                                         </div>
                                     }
+                                    else break;
                                 }
                             </div>
                         </div>
                     }
                 </div>
                 <div class="col-md-8">
-                    <a href="/Item/ViewItem?id=@item.Id">
+                    <a href="/item?id=@item.Id">
                         <div class="card-body">
                             <h5 class="card-title">@item.Title</h5>
-                            <p class="card-text">@item.Description</p>
+                            <p class="card-text">
+                                @{
+                                    int length = item.Description?.Length ?? 0;
+                                    if (length > 170)
+                                    {
+                                        var result = item.Description.Substring(0, 100);
+                                        result = result + " ...";
+                                        @result
+                                    }
+                                    else
+                                    {
+                                        @item.Description
+                                    }
+                                }
+                            </p>
                             <p class="card-text">@(item.Price)$</p>
                             <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
                             <p class="card-text"><a asp-controller="Item" asp-action="Edit">Edit</a></p>

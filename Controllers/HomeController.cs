@@ -27,10 +27,10 @@ namespace ItemHub.Controllers
         public async Task<IActionResult> Index()
         {
             ViewBag.Items = await ListItems();
-            foreach (var t in ViewBag.Items)
-            {
-                Console.WriteLine($"{t.Title} - {t.Description} - {t.Price}");
-            }
+            // foreach (var t in ViewBag.Items)
+            // {
+            //     Console.WriteLine($"{t.Title} - {t.Description} - {t.Price}");
+            // }
             return View();
         }
 

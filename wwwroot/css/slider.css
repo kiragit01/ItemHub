@@ -1,0 +1,91 @@
+
+
+.slider {
+    margin: auto;
+}
+.slider-main {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background-color: #f0f0f0;
+}
+
+.slider-main img {
+    width: 100%;
+    height: auto;
+}
+
+.main-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.prev {
+    left: 10px;
+}
+
+.next {
+    right: 10px;
+}
+
+.thumbnail-slider {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.thumbnails {
+    overflow-x: auto; /* Позволяет прокручивать миниатюры */
+    white-space: nowrap;
+    scroll-behavior: smooth; /* Плавная прокрутка */
+}
+
+.thumbs-container {
+    display: inline-flex; /* Inline для горизонтальной прокрутки */
+    transition: transform 0.3s ease; /* Плавный переход для изменения положения миниатюр */
+    overflow: hidden;
+}
+
+.thumbnail {
+    display: block;
+    object-fit: cover;
+    width: 100px;
+    height: 75px;
+    cursor: pointer;
+    margin-right: 5px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0.5;
+}
+
+.thumbnail-active {
+    opacity: 1;
+}
+
+.thumbnail:hover {
+    transform: scale(1.05);
+}
+
+.thumb-nav {
+    position: absolute;
+    z-index: 2;
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    outline: none;
+}
