@@ -29,8 +29,12 @@ namespace ItemHub.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Creator")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -44,6 +48,9 @@ namespace ItemHub.Migrations
 
                     b.Property<string>("Title")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");

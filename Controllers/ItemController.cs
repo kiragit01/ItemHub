@@ -13,9 +13,10 @@ using System.Security.Claims;
 
 namespace ItemHub.Controllers
 {
-    public class ItemController(UserContext db) : Controller
+    public class ItemController(UserContext db, IWebHostEnvironment webHostEnvironment) : Controller
     {
-        
+
+
         // GET: ItemController
         [Route("/item")]
         public async Task<ActionResult> ViewItem(Guid id)
@@ -44,17 +45,16 @@ namespace ItemHub.Controllers
         {
             if(ModelState.IsValid)
             {
-                var userLogin = User.Claims.FirstOrDefault(f => f.Type == ClaimTypes.NameIdentifier)?.Value;
+                var userLogin = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (userLogin == null)  return Unauthorized();
                 var user = await db.Users
                            .Include(u => u.Items)
                            .FirstOrDefaultAsync(o => o.Login == userLogin);
                 if (user == null)   return NotFound();
-
-                List<string> pathImages = await UploadImages(model.Images, user);
-                if (pathImages == null) throw new ArgumentNullException(nameof(pathImages));
-
-                Item item = new(model.Title, model.Description, pathImages, model.Price);
+                Guid id = Guid.NewGuid();
+                List<string> pathImages = await UploadImages(model.Images, user.Login, id);
+                
+                Item item = new(id, model.Title, model.Description, user.Login, pathImages, model.Price);
 
                 user.Items.Add(item);
                 await db.Items.AddAsync(item);
@@ -74,59 +74,50 @@ namespace ItemHub.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        [NonAction]
-        private async Task<List<string>> UploadImages(IFormFileCollection? files, User user)
-        {
-            var pathImages = new List<string>();
-            if (files != null)
-            {
-                var uploadPath = $"images/{user.Login}";
-                // создаем папку для хранения файлов
-                Directory.CreateDirectory("wwwroot/"+uploadPath);
-
-                foreach (var file in files)
-                {
-                    var type = "." + file.ContentType.Split("/")[1];
-                    // путь к файлу
-                    var pathForList = $"{uploadPath}/{RandomString(8) + type}";
-                    var fullPath = $"wwwroot/{pathForList}";
-                    pathImages.Add(pathForList);
-                    // сохраняем файл
-                    await using var fileStream = new FileStream(fullPath, FileMode.Create);
-                    await file.CopyToAsync(fileStream);
-                }
-                return pathImages;
-            }
-            else
-            {
-                return [$"images/NoImage.png"];
-            }
-
-        }
 
 
 
         // GET: ItemController/Edit/5
-        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
-        public ActionResult Edit(int id)
+        [Route("/edit")]
+        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}"), ]
+        public async Task<ActionResult> Edit(Guid id)
         {
+            Item? item = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
+            if (item == null) return BadRequest("Что-то пошло не так :(");
+            if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != item.Creator)
+            {
+                return RedirectToAction("ViewItem", "Item", new { id });
+            }
+            ViewBag.Item = item;
             return View();
         }
 
         // POST: ItemController/Edit/5
+        [Route("/edit")]
         [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<ActionResult> Edit(Guid id, ItemModel model, List<string> savedImages)
         {
-            try
-            {
-                return RedirectToAction("Index", "Home");
-            }
-            catch
-            {
-                return View();
-            }
+            if (!ModelState.IsValid) return View();
+            Item? itemDb = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
+            if (itemDb == null) return BadRequest("Что-то пошло не так 2 :(");
+            
+            // Обработка новых изображений
+            var pathImages = await UploadImages(model.Images, itemDb.Creator, id);
+            pathImages.AddRange(savedImages);
+            if(pathImages.Count != 1 && pathImages[0] == "images/NoImage.png") pathImages.RemoveAt(0);
+            
+            itemDb.PathImages = pathImages;
+            itemDb.Title = model.Title;
+            itemDb.Description = model.Description;
+            itemDb.Price = model.Price;
+            
+
+            db.Items.Update(itemDb);
+            await db.SaveChangesAsync();
+            
+            return RedirectToAction("ViewItem", "Item", new { id });
         }
 
         // GET: ItemController/Delete/5
@@ -159,6 +150,53 @@ namespace ItemHub.Controllers
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             return new string(Enumerable.Repeat(chars, length)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+        
+        //Создание путей к фото товара
+        private async Task<List<string>> UploadImages(IFormFileCollection? files, string userLogin, Guid id)
+        {
+            if (files == null) return ["images/NoImage.png"];
+            
+            var pathImages = new List<string>();
+            var uploadPath = Path.Combine(webHostEnvironment.WebRootPath, "images", userLogin, id.ToString());
+            // создаем папку для хранения файлов
+            Directory.CreateDirectory(uploadPath);
+
+            foreach (var file in files)
+            {
+                var type = "." + file.ContentType.Split("/")[1];
+                // путь к файлу
+                var pathForList = Path.Combine("images", userLogin, id.ToString(), RandomString(8) + type);
+                var fullPath = Path.Combine(webHostEnvironment.WebRootPath, pathForList);
+                pathImages.Add(pathForList);
+                // сохраняем файл
+                await using var fileStream = new FileStream(fullPath, FileMode.Create);
+                await file.CopyToAsync(fileStream);
+            }
+            return pathImages;
+        }
+
+        [HttpDelete("/delete-image")]
+        public IActionResult DeleteImage(string login, string id, string fileName)
+        {
+            var filePath = Path.Combine("wwwroot/images", login, id, fileName);
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+                return Ok();
+            }
+            return BadRequest("Не удалось найти файл");
+        }
+        
+        [HttpGet("/get-saved-images")]
+        public IActionResult GetSavedImages(string login, string id)
+        {
+            var imageFiles = Directory.GetFiles(Path.Combine(webHostEnvironment.WebRootPath, "images", login, id))
+                .Select(Path.GetFileName)
+                .ToList();
+
+            var images = imageFiles.Select(fileName => new { fileName }).ToList();
+            return Json(images);
         }
     }
 }

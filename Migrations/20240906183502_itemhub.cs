@@ -36,7 +36,9 @@ namespace ItemHub.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Title = table.Column<string>(type: "text", nullable: true),
                     Description = table.Column<string>(type: "text", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Creator = table.Column<string>(type: "text", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     PathImages = table.Column<List<string>>(type: "text[]", nullable: false),
                     Price = table.Column<int>(type: "integer", nullable: true),
                     UserId = table.Column<Guid>(type: "uuid", nullable: true)

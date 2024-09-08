@@ -33,3 +33,10 @@ body {
     object-fit: cover;
     height: 100%;
 }
+
+.line-clamp-3 {
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 3;
+}

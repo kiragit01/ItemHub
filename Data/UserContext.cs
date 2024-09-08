@@ -5,10 +5,9 @@ using System.Collections.Generic;
 
 namespace ItemHub.Data
 {
-    public class UserContext : DbContext
+    public class UserContext(DbContextOptions<UserContext> options) : DbContext(options)
     {
         public DbSet<User> Users { get; set; }
         public DbSet<Item> Items { get; set; }
-        public UserContext(DbContextOptions<UserContext> options) : base(options) { }
     }
 }

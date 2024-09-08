@@ -1,4 +1,5 @@
-﻿@{
+﻿@using System.Security.Claims
+@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -61,24 +62,13 @@
                     <a href="/item?id=@item.Id">
                         <div class="card-body">
                             <h5 class="card-title">@item.Title</h5>
-                            <p class="card-text">
-                                @{
-                                    int length = item.Description?.Length ?? 0;
-                                    if (length > 170)
-                                    {
-                                        var result = item.Description.Substring(0, 100);
-                                        result = result + " ...";
-                                        @result
-                                    }
-                                    else
-                                    {
-                                        @item.Description
-                                    }
-                                }
-                            </p>
+                            <p class="card-text line-clamp-3"> @item.Description</p>
                             <p class="card-text">@(item.Price)$</p>
-                            <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
-                            <p class="card-text"><a asp-controller="Item" asp-action="Edit">Edit</a></p>
+                            @* <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p> *@
+                            @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
+                            {
+                                <p class="card-text"><a href="/edit?id=@item.Id">Edit</a></p>
+                            }
                         </div>
                     </a>
                 </div>

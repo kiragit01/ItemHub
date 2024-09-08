@@ -1,4 +1,3 @@
-alert("хуйня");
 document.addEventListener('DOMContentLoaded', function () {
     const thumbnails = document.querySelector('.thumbs-container');
     const thumbnailImages = document.querySelectorAll('.thumbnail');

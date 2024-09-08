@@ -1,0 +1,227 @@
+/*TITLE*/
+
+.input-container {
+    position: relative;
+}
+.input-container input[type="text"]{
+    font-size: 20px;
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid #ff5e5e;
+    padding: 5px 0;
+    background-color: transparent;
+    outline: none;
+}
+.input-container .label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #8f3333;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+.input-container input[type="text"]:focus ~ .label{
+    top: -20px;
+    font-size: 16px;
+    color: #333;
+}
+.input-container input[type="text"]:valid ~ .label{
+    top: -20px;
+    font-size: 16px;
+    color: #1ba100;
+}
+.input-container .underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 100%;
+    background-color: #333;
+    transform: scaleX(0);
+    transition: all 0.3s ease;
+}
+.input-container input[type="text"]:valid ~ .underline{
+    background-color: #1ba100;
+    transform: scaleX(1);
+}
+.input-container input[type="text"]:focus ~ .underline{
+    transform: scaleX(1);
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+input[type="number"]::placeholder {
+    opacity: 0.7;
+    color: white;
+}
+.w-price{
+    width: 225px;
+}
+.border-bottom-price{
+    z-index: 16;
+    bottom: 6px;
+    position: absolute;
+    margin-left: auto!important;
+    margin-right: auto;
+    left: 0;
+    right: -30px;
+    text-align: center;
+    opacity: 0.5;
+    border-bottom: 2px solid #f0f0f0!important;
+    width: 70px;
+}
+
+
+
+
+/*UPDATE IMAGES FORMS*/
+
+.app {
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    /* gap: 10px; */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* gap: 15px; */
+    width: 100%;
+    /* padding-bottom: 10px; */
+}
+
+.header h2 {
+    min-width: fit-content;
+}
+
+.server-message {
+    width: 100%;
+    padding: 16px;
+    border-radius: 5px;
+}
+
+.input-div {
+    width: 100%;
+    height: 250px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border: 2px dashed #0029748c;
+    background-color: white;
+    position: relative;
+    border-bottom: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+    transition: all ease 0.5s;
+}
+
+.input-div .browse {
+    color: black;
+    font-weight: bold;
+    transition: all ease 0.5s;
+}
+
+.file {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.saved-div,
+.queued-div {
+    width: 100%;
+    min-height: 75px;
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 5px;
+    position: relative;
+    border-radius: 5px;
+    border: 2px solid #0029748c;
+    background-color: white;
+    margin-top: 0;
+    border-top-right-radius: 0;
+    border-top-left-radius: 0;
+}
+
+.saved-div .image,
+.queued-div .image {
+    height: 72px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    position: relative;
+}
+
+.saved-div .image:nth-child(4n),
+.queued-div .image:nth-child(4n) {
+    margin-right: 0;
+}
+
+.saved-div .image img,
+.queued-div .image img {
+    height: 100%;
+    width: 100%;
+}
+
+.saved-div .image span,
+.queued-div .image span {
+    position: absolute;
+    top: -4px;
+    right: 4px;
+    cursor: pointer;
+    font-size: 22px;
+}
+
+.saved-div .image span:hover,
+.queued-div .image span:hover {
+    opacity: 0.8;
+}
+
+.saved-div .span--hidden,
+.queued-div .span--hidden {
+    visibility: hidden;
+}
+
+.input-div:hover{
+    color: #365bff;
+    background-color: #9ab1ff77;
+}
+
+.input-div._active .browse{
+    color: #ffffff;
+}
+
+
+.input-div._active {
+    color: #ffffff;
+    background-color: #3d6affc4;
+}
+
+
+
+/*SUBMIT BUTTON*/
+
+.submit-all{
+    z-index: 10;
+    bottom: 30px;
+    position: fixed;
+    display: flex;
+    justify-content: center;
+}
+.submit-all-btn{
+    padding: 0.7rem;
+}
+
+/*OTHER*/
+
+.resize-none {
+    resize: none;
+}
