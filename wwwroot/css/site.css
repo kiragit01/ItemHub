@@ -40,3 +40,6 @@ body {
     overflow: hidden;
     -webkit-line-clamp: 3;
 }
+.cursor-pointer{
+    cursor: pointer;
+}

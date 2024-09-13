@@ -51,7 +51,7 @@ namespace ItemHub.Controllers
                            .Include(u => u.Items)
                            .FirstOrDefaultAsync(o => o.Login == userLogin);
                 if (user == null)   return NotFound();
-                Guid id = Guid.NewGuid();
+                var id = Guid.NewGuid();
                 List<string> pathImages = await UploadImages(model.Images, user.Login, id);
                 
                 Item item = new(id, model.Title, model.Description, user.Login, pathImages, model.Price);
@@ -131,16 +131,19 @@ namespace ItemHub.Controllers
         [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public async Task<ActionResult> Delete(Guid id)
         {
-            try
+            Item? item = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
+            if (item == null) return BadRequest("Что-то пошло не так :(");
+            if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != item.Creator)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index","Home");
             }
-            catch
-            {
-                return View();
-            }
+
+            db.Items.Remove(item);
+            await db.SaveChangesAsync();
+            
+            return RedirectToAction("Index","Home");
         }
 
         //Генератор рандомного набора символов

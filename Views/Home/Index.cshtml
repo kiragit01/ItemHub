@@ -4,16 +4,43 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
+    @if (User.Identity!.IsAuthenticated)
+    {
+    <h1 class="display-4">Welcome, @User.Identity.Name</h1>
+    }
+    else
+    {
+        <h1 class="display-4">Welcome</h1>
+    }
     @if (User.IsInRole("SELLER"))
     {
         <div class="h4"> 
             <a asp-action="Create" asp-controller="Item">Create Item</a>
         </div>
     }
-    
+</div>
     @foreach (var item in ViewBag.Items)
     {
+        <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" aria-labelledby="exampleModalLabel-@item.Id" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel-@item.Id">Удаление</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите удалить "@item.Title"?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <form asp-controller="Item" asp-action="Delete">
+                            <input name="id" type="text" value="@item.Id" class="visually-hidden">
+                            <button type="submit" class="btn btn-primary">Да, удалить</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="card mb-3 col-md-8 m-auto">
             <div class="row ">
                 <div class="col"> 
@@ -30,7 +57,7 @@
                                 @for (int i = 0; i < item.PathImages.Count; i++)
                                 {
                                     @if(i == 0)
-                                    { 
+                                    {
                                         <button type="button" data-bs-target="#carouselExampleIndicators-@item.Id" data-bs-slide-to="@i" class="active" aria-current="true" aria-label="Slide @(i+1)"></button>
                                     }
                                     else if (i < 10)
@@ -59,20 +86,31 @@
                     }
                 </div>
                 <div class="col-md-8">
-                    <a href="/item?id=@item.Id">
-                        <div class="card-body">
-                            <h5 class="card-title">@item.Title</h5>
-                            <p class="card-text line-clamp-3"> @item.Description</p>
-                            <p class="card-text">@(item.Price)$</p>
-                            @* <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p> *@
-                            @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
-                            {
-                                <p class="card-text"><a href="/edit?id=@item.Id">Edit</a></p>
-                            }
+                    <a href="/item?id=@item.Id" class="text-decoration-none text-black">
+                        <div class="card-body h-100 d-grid align-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="card-title">@item.Title</h5>
+                                    <p class="card-title">@(item.Price)$</p>
+                                </div>
+                                <p class="card-text line-clamp-3"> @item.Description</p>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <p class="card-text"><small class="text-muted">@item.CreatedDate.ToLocalTime()</small></p>
+                                @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
+                                {
+                                    <p class="card-text mb-0">
+                                        <a class="text-decoration-underline cursor-pointer link-danger"
+                                           data-bs-toggle="modal" data-bs-target="#exampleModal-@item.Id">Delete</a>
+                                    </p>
+                                    <p class="card-text">
+                                        <a class="text-decoration-underline" href="/edit?id=@item.Id">Edit</a>
+                                    </p>
+                                }
+                            </div>
                         </div>
                     </a>
                 </div>
             </div>
         </div>
     }
-</div>
