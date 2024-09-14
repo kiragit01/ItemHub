@@ -1,4 +1,22 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
-
-// Write your JavaScript code.
+﻿function show_hide_password(target){
+    const input = document.getElementById('password-input');
+    if (input.getAttribute('type') === 'password') {
+        target.classList.add('view');
+        input.setAttribute('type', 'text');
+    } else {
+        target.classList.remove('view');
+        input.setAttribute('type', 'password');
+    }
+    return false;
+}
+function show_hide_password_confirm(target){
+    const input = document.getElementById('password-input_confirm');
+    if (input.getAttribute('type') === 'password') {
+        target.classList.add('view');
+        input.setAttribute('type', 'text');
+    } else {
+        target.classList.remove('view');
+        input.setAttribute('type', 'password');
+    }
+    return false;
+}

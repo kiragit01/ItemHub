@@ -43,3 +43,22 @@ body {
 .cursor-pointer{
     cursor: pointer;
 }
+
+.password {
+    position: relative;
+}
+.password input{
+    padding-right: 40px;
+}
+.password-control {
+    position: absolute;
+    top: 27px;
+    right: 12px;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: url(../images/no-view.svg) 0 0 no-repeat;
+}
+.password-control.view {
+    background: url(../images/view.svg) 0 0 no-repeat;
+}

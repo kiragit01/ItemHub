@@ -1,5 +1,6 @@
-﻿@{
-    var item = ViewBag.Item;
+﻿@model Item
+@{
+    var item = Model;
     var pathImages = item.PathImages;
     ViewBag.Title = item.Title;
 }
@@ -83,5 +84,4 @@
 
 
 <script src="~/js/slider.js"></script>
-
 

@@ -6,6 +6,7 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using ItemHub.Models.Auth;
 using ItemHub.Models.User;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ItemHub.Controllers
 {
@@ -77,6 +78,73 @@ namespace ItemHub.Controllers
         }
 
         
+        [HttpGet]
+        [Route("account")]
+        [Authorize]
+        public async Task<IActionResult> Account()
+        {
+            var user = await db.Users.FirstOrDefaultAsync(u =>
+                u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            return View(user);
+        }
+        
+        
+        [HttpGet]
+        [Route("account/edit")]
+        [Authorize]
+        public async Task<IActionResult> EditAccount()
+        {
+            var user = await db.Users.FirstOrDefaultAsync(u =>
+                u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            if (user == null) return RedirectToAction("Login");
+            var editUser = new EditAccModel
+            {
+                Login = user.Login,
+                Password = user.Password,
+                Name = user.Name,
+                Email = user.Email
+            };
+            ViewBag.editUser = editUser;
+            return View();
+        }
+
+        [HttpPost]
+        [Route("account/edit")]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditAccount(EditAccModel model)
+        {
+            if (!ModelState.IsValid) return View();
+            User? check = await db.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            if (check != null && check?.Email != User.FindFirst(ClaimTypes.Email)?.Value)
+            {
+                ModelState.AddModelError("", "Этот Email уже зарегистрирован");
+                return View();
+            }
+            check = await db.Users.FirstOrDefaultAsync(u => u.Login == model.Login);
+            if (check != null && check?.Login != User.FindFirst(ClaimTypes.NameIdentifier)?.Value)
+            {
+                ModelState.AddModelError("", "Этот логин занят");
+                return View();
+            }
+            
+            var user = await db.Users.FirstOrDefaultAsync(u =>
+                u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            if (user == null) return RedirectToAction("Index", "Home");
+            
+            user.Login = model.Login;
+            user.Email = model.Email;
+            user.Name = model.Name;
+            user.Password = model.Password;
+
+            db.Users.Update(user);
+            await db.SaveChangesAsync();
+            await Authenticate(user); // аутентификация
+
+            return RedirectToAction("Index", "Home");
+        }
+        
 
         private async Task Authenticate(User user)
         {
@@ -93,11 +161,14 @@ namespace ItemHub.Controllers
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
             // создаем объект ClaimsIdentity
-            ClaimsIdentity id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
+            var id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
             // установка аутентификационных куки
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
         }
-
+        
+        
+        
+        
 
         public async Task<IActionResult> Logout()
         {

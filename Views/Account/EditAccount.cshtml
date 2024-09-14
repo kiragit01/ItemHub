@@ -1,0 +1,65 @@
+@model EditAccModel
+
+@{
+    ViewData["Title"] = "Edit Account";
+    var user = new EditAccModel()
+    {
+    Login = "",
+    Email = "",
+    Password = "",
+    Name = ""
+    };
+    if (ViewBag.editUser != null)
+    {
+        user = ViewBag.editUser;
+    }
+}
+<div class="container col-xl-7 mt-5">
+    <h1>Account</h1>
+    <form class="row g-3 needs-validation" asp-anti-forgery="true" method="post" novalidate>
+        <div class="validation" asp-validation-summary="ModelOnly"></div>
+        <div class="col-12">
+            <label for="inputLogin" class="form-label">Login</label>
+            <div class="input-group has-validation">
+                <div class="input-group-text">@@</div>
+                <input type="text" asp-for="Login" class="form-control" id="inputLogin" value="@user.Login" placeholder="Username" required>
+            </div>
+            <div class="invalid-feedback">
+                Введите логин.
+            </div>
+            @Html.ValidationMessageFor(x => x.Login)
+            
+        </div>
+        <div class="col-md-6">
+            <label for="inputEmail" class="form-label">Email</label>
+            <input type="email" asp-for="Email" class="form-control" id="inputEmail" value="@user.Email" placeholder="name@example.com" required>
+            <div class="invalid-feedback">
+                Введите email.
+            </div>
+            @Html.ValidationMessageFor(x => x.Email)
+        </div>
+        <div class="col-md-6">
+            <label for="password-input" class="form-label">Password</label>
+            <div class="position-relative has-validation">
+                <input type="password" asp-for="Password" class="form-control" id="password-input" value="@user.Password" required>
+                <a class="password-control" style="top: 10px;" onclick="return show_hide_password(this);"></a>
+                <div class="invalid-feedback">
+                    Введите пароль.
+                </div>
+                @Html.ValidationMessageFor(x => x.Password)
+            </div>
+        </div>
+        <div class="col-12">
+            <label for="inputName" class="form-label">Name</label>
+            <input type="text" asp-for="Name" class="form-control" id="inputName" value="@user.Name" placeholder="Steve" required>
+            <div class="invalid-feedback">
+                Введите имя.
+            </div>
+            @Html.ValidationMessageFor(x => x.Name)
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary mt-3">Сохранить</button>
+        </div>
+    </form>
+</div>
+

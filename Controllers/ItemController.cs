@@ -23,8 +23,7 @@ namespace ItemHub.Controllers
         {
             Item? item = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
             if (item == null) return BadRequest("Что-то пошло не так :(");
-            ViewBag.Item = item;
-            return View();
+            return View(item);
         }
 
 
@@ -79,7 +78,7 @@ namespace ItemHub.Controllers
 
         // GET: ItemController/Edit/5
         [Route("/edit")]
-        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}"), ]
+        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
         public async Task<ActionResult> Edit(Guid id)
         {
             Item? item = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
@@ -88,7 +87,6 @@ namespace ItemHub.Controllers
             {
                 return RedirectToAction("ViewItem", "Item", new { id });
             }
-            ViewBag.Item = item;
             return View();
         }
 
@@ -118,13 +116,6 @@ namespace ItemHub.Controllers
             await db.SaveChangesAsync();
             
             return RedirectToAction("ViewItem", "Item", new { id });
-        }
-
-        // GET: ItemController/Delete/5
-        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
-        public ActionResult Delete(int id)
-        {
-            return View();
         }
 
         // POST: ItemController/Delete/5

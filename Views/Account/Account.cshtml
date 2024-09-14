@@ -1,0 +1,50 @@
+@model User
+@{
+    ViewData["Title"] = Model.Login;
+}
+
+<div class="container col-xl-7 mt-5">
+    <h1>Account</h1>
+    <div class="row g-3">
+        <div class="row g-2">
+            <div class="col-md">
+                <div class="form-floating">
+                    <input type="text" class="form-control disabled" id="LoginInput"
+                           value="@Model.Login" readonly>
+                    <label for="LoginInput">Login</label>
+                </div>
+            </div>
+        </div>
+        <div class="row g-2">
+            <div class="col-md">
+                <div class="form-floating">
+                    <input type="email" class="form-control disabled" id="EmailInput"
+                           value="@Model.Email" readonly>
+                    <label for="EmailInput">Email</label>
+                </div>
+            </div>
+        </div>
+        <div class="row g-2">
+            <div class="col-md">
+                <div class="form-floating">
+                    <input type="password" class="form-control disabled" id="password-input" 
+                           value="@Model.Password" readonly >
+                    <label for="password-input">Password</label>
+                    <a class="password-control" onclick="return show_hide_password(this);"></a>
+                </div>
+            </div>
+        </div>
+        <div class="row g-2">
+            <div class="col-md">
+                <div class="form-floating">
+                    <input type="text" class="form-control disabled" id="NameInput"
+                           value="@Model.Name" readonly>
+                    <label for="NameInput">Name</label>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <a asp-action="EditAccount" class="btn btn-primary mt-3">Изменить</a>
+        </div>
+    </div>
+</div>
