@@ -128,10 +128,19 @@ namespace ItemHub.Controllers
                 return View();
             }
             
-            var user = await db.Users.FirstOrDefaultAsync(u =>
-                u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await db.Users
+                .Include(user => user.Items)
+                .FirstOrDefaultAsync(u => u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             if (user == null) return RedirectToAction("Index", "Home");
+            
+            foreach (var item in user.Items)
+            {
+                var itemDb = await db.Items.FirstOrDefaultAsync(o => o.Id == item.Id);
+                if (itemDb == null) continue;
+                itemDb.Creator = model.Login; 
+                db.Items.Update(itemDb);
+            }
             
             user.Login = model.Login;
             user.Email = model.Email;
@@ -166,17 +175,39 @@ namespace ItemHub.Controllers
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
         }
         
-        
-        
-        
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAccount()
+        {
+            var user = await db.Users
+                .Include(user => user.Items)
+                .FirstOrDefaultAsync(u => u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
+            if (user == null) return BadRequest("Войдите в аккаунт для того чтобы его удалить.");
+            
+            foreach (var item in user.Items)
+            {
+                var itemDb = await db.Items.FirstOrDefaultAsync(o => o.Id == item.Id);
+                if (itemDb != null) db.Items.Remove(itemDb);
+            }
+            
+            
+            db.Users.Remove(user);
+            await db.SaveChangesAsync();
+            
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login", "Account");
+        }
+        
+        
+        
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "Account");
         }
-
-
+        
         public IActionResult AccessDenied() => RedirectToAction("Index", "Home");
     }
 }

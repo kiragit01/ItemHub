@@ -1,7 +1,7 @@
 @model Item
 @{
     ViewBag.Title = "Edit Item";
-    var item = Model;
+    var item = ViewBag.Item;
 }
 <link rel="stylesheet" href="~/css/ItemEdit.css">
 <form method="post" class="submit-all container" asp-action="Edit" id="submit1">

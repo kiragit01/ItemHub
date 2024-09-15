@@ -23,7 +23,8 @@ namespace ItemHub.Controllers
         {
             Item? item = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
             if (item == null) return BadRequest("Что-то пошло не так :(");
-            return View(item);
+            ViewBag.Item = item;
+            return View();
         }
 
 
@@ -82,11 +83,13 @@ namespace ItemHub.Controllers
         public async Task<ActionResult> Edit(Guid id)
         {
             Item? item = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
-            if (item == null) return BadRequest("Что-то пошло не так :(");
+            if (item == null) return BadRequest("Такого товара не существует :(");
             if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != item.Creator)
             {
                 return RedirectToAction("ViewItem", "Item", new { id });
             }
+
+            ViewBag.Item = item;
             return View();
         }
 
@@ -99,7 +102,7 @@ namespace ItemHub.Controllers
         {
             if (!ModelState.IsValid) return View();
             Item? itemDb = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
-            if (itemDb == null) return BadRequest("Что-то пошло не так 2 :(");
+            if (itemDb == null) return BadRequest("Такого товара не существует :(");
             
             // Обработка новых изображений
             var pathImages = await UploadImages(model.Images, itemDb.Creator, id);
@@ -125,7 +128,7 @@ namespace ItemHub.Controllers
         public async Task<ActionResult> Delete(Guid id)
         {
             Item? item = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
-            if (item == null) return BadRequest("Что-то пошло не так :(");
+            if (item == null) return BadRequest("Такого товара не существует :(");
             if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != item.Creator)
             {
                 return RedirectToAction("Index","Home");
@@ -136,6 +139,8 @@ namespace ItemHub.Controllers
             
             return RedirectToAction("Index","Home");
         }
+
+        
 
         //Генератор рандомного набора символов
         private static readonly Random random = new();
