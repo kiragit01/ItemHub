@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ItemHub.Migrations
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20240906183502_itemhub")]
+    [Migration("20240917164104_itemhub")]
     partial class itemhub
     {
         /// <inheritdoc />
