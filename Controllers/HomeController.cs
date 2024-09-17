@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ItemHub.Controllers
 {
@@ -27,14 +28,22 @@ namespace ItemHub.Controllers
         public async Task<IActionResult> Index()
         {
             ViewBag.Items = await ListItems();
-            // foreach (var t in ViewBag.Items)
-            // {
-            //     Console.WriteLine($"{t.Title} - {t.Description} - {t.Price}");
-            // }
+            return View();
+        }
+        
+        [Route("my")]
+        [Authorize(Roles = UserRoles.SELLER)]
+        public async Task<IActionResult> MyItems()
+        {
+            var user = await db.Users
+                .Include(user => user.Items)
+                .FirstOrDefaultAsync(u => u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            if (user == null) return BadRequest("Войдите в аккаунт.");
+            ViewBag.Items = user.Items;
             return View();
         }
 
-        public async Task<List<Item>> ListItems() => await db.Items.ToListAsync();
+        private async Task<List<Item>> ListItems() => await db.Items.ToListAsync();
 
         public IActionResult Privacy()
         {

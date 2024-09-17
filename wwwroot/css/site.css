@@ -62,3 +62,6 @@ body {
 .password-control.view {
     background: url(../images/view.svg) 0 0 no-repeat;
 }
+
+.h-90{ height: 90%;}
+

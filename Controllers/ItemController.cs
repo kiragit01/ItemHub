@@ -113,8 +113,8 @@ namespace ItemHub.Controllers
             itemDb.Title = model.Title;
             itemDb.Description = model.Description;
             itemDb.Price = model.Price;
+            itemDb.UpdatedDate = DateTime.UtcNow;
             
-
             db.Items.Update(itemDb);
             await db.SaveChangesAsync();
             
@@ -139,7 +139,18 @@ namespace ItemHub.Controllers
             
             return RedirectToAction("Index","Home");
         }
+        
+        
+        [HttpPost]
+        public IActionResult SavedItems(Guid id)
+        {
+            // Получаем список сохранённых ID товаров
+            Console.WriteLine(id);
 
+            // Вернём успешный ответ
+            return Ok();
+        }
+        
         
 
         //Генератор рандомного набора символов

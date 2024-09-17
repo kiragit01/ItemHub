@@ -1,4 +1,5 @@
-﻿@using ItemHub.Models.User
+﻿@using System.Security.Claims
+@using ItemHub.Models.User
 @model User
 <!DOCTYPE html>
 <html lang="en">
@@ -24,9 +25,13 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
+                        @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
+                        {
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Privacy">Сохраненные</a>
                         </li>
+                        }
+                        
                     </ul>
 
 
@@ -40,7 +45,7 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" asp-controller="Account" asp-action="Account">Аккаунт</a></li>
-                                    <li><a class="dropdown-item" href="#">Мои товары</a></li>
+                                    <li><a class="dropdown-item" asp-action="MyItems">Мои товары</a></li>
                                     <li><a class="dropdown-item" href="#">Темная тема</a></li>
                                     <li>
                                         <hr class="dropdown-divider">

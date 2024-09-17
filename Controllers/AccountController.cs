@@ -192,10 +192,8 @@ namespace ItemHub.Controllers
                 if (itemDb != null) db.Items.Remove(itemDb);
             }
             
-            
             db.Users.Remove(user);
             await db.SaveChangesAsync();
-            
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "Account");
         }

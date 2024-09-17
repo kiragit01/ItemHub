@@ -1,10 +1,10 @@
-﻿@using System.Net
 @using System.Security.Claims
+@model Item
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "My Items";
 }
 
-<div class="text-center mb-lg-4">
+<div class="text-center">
     @if (User.Identity!.IsAuthenticated)
     {
         <h1 class="display-4">Welcome, @User.Identity.Name</h1>
@@ -22,19 +22,18 @@
 </div>
 @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.SELLER)
 {
-<div class="d-flex justify-content-center mb-3">
-    <ul class="nav nav-tabs col-8">
-        <li class="nav-item">
-            <a class="nav-link active" href="#">Все товары</a>
-        </li>
-        <li class="nav-item">
-            <a asp-action="MyItems" class="nav-link">Мои товары</a>
-        </li>
-    </ul>
-</div>
+    <div class="d-flex justify-content-center mb-3">
+        <ul class="nav nav-tabs col-8">
+            <li class="nav-item">
+                <a asp-action="Index" class="nav-link">Все товары</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="#">Мои товары</a>
+            </li>
+        </ul>
+    </div>
 }
-
-    @foreach (var item in ViewBag.Items)
+@foreach (var item in ViewBag.Items)
     {
         <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" aria-labelledby="exampleModalLabel-@item.Id" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -111,36 +110,16 @@
                                 <p class="card-text line-clamp-3">@item.Description</p>
                             </div>
                             <div class="d-flex justify-content-between align-items-end">
-                                <p class="card-text mb-0">
-                                    <small class="text-muted">@@@item.Creator</small><br/>
-                                    @if (item.UpdatedDate == null)
-                                    {
-                                        <small class="text-muted">@item.CreatedDate.ToLocalTime()</small>
-                                    }
-                                    else
-                                    {
-                                        <small class="text-muted">Обновлено: @item.UpdatedDate.ToLocalTime()</small>
-                                    }
+                                <p class="card-text">
+                                    <small class="text-muted">@item.CreatedDate.ToLocalTime()</small>
                                 </p>
-                                @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
-                                {
-                                    <div class="d-flex">
-                                        <p class="card-text mb-0">
-                                            <a class="text-decoration-underline cursor-pointer link-danger"
-                                               data-bs-toggle="modal" data-bs-target="#exampleModal-@item.Id">Delete</a>
-                                        </p>
-                                        <p class="card-text ms-lg-5">
-                                            <a class="text-decoration-underline" href="/edit?id=@item.Id">Edit</a>
-                                        </p>
-                                    </div>
-                                }
-                                @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
-                                {
-                                    <form asp-action="SavedItems" asp-controller="Item" method="post" class="save-form">
-                                        <input type="hidden" name="id" value="@item.Id" />
-                                        <a type="button" class="btn btn-outline-success btn-sm save-button" data-id="@item.Id">Сохранить</a>
-                                    </form>
-                                }
+                                <p class="card-text mb-0">
+                                    <a class="text-decoration-underline cursor-pointer link-danger"
+                                       data-bs-toggle="modal" data-bs-target="#exampleModal-@item.Id">Delete</a>
+                                </p>
+                                <p class="card-text">
+                                    <a class="text-decoration-underline" href="/edit?id=@item.Id">Edit</a>
+                                </p>
                             </div>
                         </div>
                     </a>
@@ -148,7 +127,7 @@
             </div>
         </div>
     }
-    @if (ViewBag.Items.Count <= 0)
-    {
-        <p class="text-center text-muted">Нет ни одного товара.</p>
-    }
+@if (ViewBag.Items.Count <= 0)
+{
+    <div class="text-center text-muted h4">У вас нет ни одного товара.</div>
+}
