@@ -13,8 +13,8 @@ namespace ItemHub.Models.User
         public string Email { get; set; }
         public int Age { get; set; }
 
-        public List<string> Roles { get; set; } = new();
-        public List<Item> Items { get; set; } = new();
+        public List<string> Roles { get; set; } = [];
+        public List<Item> Items { get; set; } = [];
 
         public User(string login, string password, string name, string email, int age)
         {

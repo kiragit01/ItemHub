@@ -1,16 +1,16 @@
-﻿using ItemHub.Data;
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
+using ItemHub.DbConnection.Interfaces;
+using ItemHub.DbConnection;
 using ItemHub.Models.Auth;
 using ItemHub.Models.User;
 using Microsoft.AspNetCore.Authorization;
 
 namespace ItemHub.Controllers
 {
-    public class AccountController(UserContext db) : Controller
+    public class AccountController(IUserDb db) : Controller
     {
         [HttpGet]
         [Route("register")]
@@ -25,27 +25,23 @@ namespace ItemHub.Controllers
         public async Task<IActionResult> Register(RegisterModel model)
         {
             if (!ModelState.IsValid) return View();
-            User? check = await db.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
-            if (check != null)
+            var debug = await db.CheckUser(model.Email, model.Login);
+            switch (debug)
             {
-                ModelState.AddModelError("", "Этот Email уже зарегистрирован");
-                return View();
-            }
-            check = await db.Users.FirstOrDefaultAsync(u => u.Login == model.Login);
-            if (check != null)
-            {
-                ModelState.AddModelError("", "Этот логин занят");
-                return View();
+                case DebugMessage.ErrorEmail:
+                    ModelState.AddModelError("", "Этот Email уже зарегистрирован");
+                    return View();
+                case DebugMessage.ErrorLogin:
+                    ModelState.AddModelError("", "Этот логин занят");
+                    return View();
             }
 
-            var user = new User(model.Login, model.Password, model.Name, model.Email, model.Age.Value);
+            var user = new User(model.Login, model.Password, model.Name, model.Email, model.Age);
 
             if (model.Seller) user.AddRoles([UserRoles.SELLER]);
             else user.AddRoles([UserRoles.CUSTOMER]);
 
-            db.Users.Add(user);
-            await db.SaveChangesAsync();
-
+            await db.AddUser(user);
             await Authenticate(user); // аутентификация
 
             return RedirectToAction("Index", "Home");
@@ -53,28 +49,22 @@ namespace ItemHub.Controllers
 
         [HttpGet]
         [Route("login")]
-        public IActionResult Login()
-        {
-            return View();
-        }
+        public IActionResult Login() => View();
 
         [HttpPost]
         [Route("login")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View();
+            User? user = await db.SingIn(model.Login, model.Password);
+            if (user == null)
             {
-                User? user = await db.Users
-                    .FirstOrDefaultAsync(u => (u.Login == model.Login || u.Email == model.Login) && u.Password == model.Password);
-                if (user != null)
-                {
-                    await Authenticate(user); // аутентификация
-                    return RedirectToAction("Index", "Home");
-                }
                 ModelState.AddModelError("", "Неверный логин и(или) пароль.");
+                return Ok();                                                                                    //ПРОВЕРИТЬ ВМЕСТО VIEW
             }
-            return View();
+            await Authenticate(user); // аутентификация
+            return RedirectToAction("Index", "Home");
         }
 
         
@@ -83,8 +73,7 @@ namespace ItemHub.Controllers
         [Authorize]
         public async Task<IActionResult> Account()
         {
-            var user = await db.Users.FirstOrDefaultAsync(u =>
-                u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await db.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             return View(user);
         }
         
@@ -94,17 +83,15 @@ namespace ItemHub.Controllers
         [Authorize]
         public async Task<IActionResult> EditAccount()
         {
-            var user = await db.Users.FirstOrDefaultAsync(u =>
-                u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await db.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             if (user == null) return RedirectToAction("Login");
-            var editUser = new EditAccModel
+            ViewBag.editUser = new EditAccModel
             {
                 Login = user.Login,
                 Password = user.Password,
                 Name = user.Name,
                 Email = user.Email
             };
-            ViewBag.editUser = editUser;
             return View();
         }
 
@@ -115,31 +102,26 @@ namespace ItemHub.Controllers
         public async Task<IActionResult> EditAccount(EditAccModel model)
         {
             if (!ModelState.IsValid) return View();
-            User? check = await db.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
-            if (check != null && check?.Email != User.FindFirst(ClaimTypes.Email)?.Value)
+            DebugMessage check = await db.CheckUser(model.Email, model.Login);
+            if (check == DebugMessage.ErrorEmail && model.Email != User.FindFirst(ClaimTypes.Email)!.Value)
             {
                 ModelState.AddModelError("", "Этот Email уже зарегистрирован");
                 return View();
             }
-            check = await db.Users.FirstOrDefaultAsync(u => u.Login == model.Login);
-            if (check != null && check?.Login != User.FindFirst(ClaimTypes.NameIdentifier)?.Value)
+            if (check == DebugMessage.ErrorLogin && model.Login != User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
             {
                 ModelState.AddModelError("", "Этот логин занят");
                 return View();
             }
-            
-            var user = await db.Users
-                .Include(user => user.Items)
-                .FirstOrDefaultAsync(u => u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-
+            var user = await db.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             if (user == null) return RedirectToAction("Index", "Home");
             
             foreach (var item in user.Items)
             {
-                var itemDb = await db.Items.FirstOrDefaultAsync(o => o.Id == item.Id);
+                var itemDb = await db.UserItems(item.Id);
                 if (itemDb == null) continue;
                 itemDb.Creator = model.Login; 
-                db.Items.Update(itemDb);
+                await db.UserItems(itemDb);
             }
             
             user.Login = model.Login;
@@ -147,8 +129,7 @@ namespace ItemHub.Controllers
             user.Name = model.Name;
             user.Password = model.Password;
 
-            db.Users.Update(user);
-            await db.SaveChangesAsync();
+            await db.UpdateUser(user);
             await Authenticate(user); // аутентификация
 
             return RedirectToAction("Index", "Home");
@@ -180,20 +161,17 @@ namespace ItemHub.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteAccount()
         {
-            var user = await db.Users
-                .Include(user => user.Items)
-                .FirstOrDefaultAsync(u => u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await db.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             if (user == null) return BadRequest("Войдите в аккаунт для того чтобы его удалить.");
             
             foreach (var item in user.Items)
             {
-                var itemDb = await db.Items.FirstOrDefaultAsync(o => o.Id == item.Id);
-                if (itemDb != null) db.Items.Remove(itemDb);
+                var itemDb = await db.UserItems(item.Id);
+                if (itemDb != null) await db.RemoveItems(itemDb);
             }
-            
-            db.Users.Remove(user);
-            await db.SaveChangesAsync();
+
+            await db.DeleteUser(user);
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "Account");
         }

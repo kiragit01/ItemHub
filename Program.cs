@@ -6,13 +6,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using System.Text;
+using ItemHub.DbConnection;
+using ItemHub.DbConnection.Interfaces;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddAuthorization();
-builder.Services.AddDbContext<UserContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<DataBaseContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
@@ -20,6 +22,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
                     options.LoginPath = "/login";
                     options.Cookie.Name = "authCookie";
                 });
+
+builder.Services.AddScoped<IItemDb, ItemDb>();
+builder.Services.AddScoped<IUserDb, UserDb>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -30,7 +35,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 

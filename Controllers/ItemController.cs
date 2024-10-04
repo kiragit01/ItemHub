@@ -13,7 +13,7 @@ using System.Security.Claims;
 
 namespace ItemHub.Controllers
 {
-    public class ItemController(UserContext db, IWebHostEnvironment webHostEnvironment) : Controller
+    public class ItemController(DataBaseContext db, IWebHostEnvironment webHostEnvironment) : Controller
     {
 
 

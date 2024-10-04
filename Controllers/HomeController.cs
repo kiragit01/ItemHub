@@ -16,9 +16,9 @@ namespace ItemHub.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly UserContext db;
+        private readonly DataBaseContext db;
 
-        public HomeController(ILogger<HomeController> logger, UserContext context)
+        public HomeController(ILogger<HomeController> logger, DataBaseContext context)
         {
             _logger = logger;
             db = context;
