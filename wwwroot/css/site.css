@@ -25,6 +25,11 @@ body {
     font-weight: bold;
     color: brown;
 }
+.validation-summary-errors > * ,
+.field-validation-error > * {
+    padding: 0;
+    list-style: none;
+}
 
 .exmpl {
     height: 200px;
@@ -64,4 +69,16 @@ body {
 }
 
 .h-90{ height: 90%;}
+
+.custom-color{
+    color: rgba(var(--bs-link-main-color-rgb));
+}
+
+[data-bs-theme=light] {
+    --bs-link-main-color-rgb: 0, 0, 0;
+}
+[data-bs-theme=dark]{
+    --bs-link-main-color-rgb: 255, 255, 255;
+    --bs-body-bg: #121416;
+}
 

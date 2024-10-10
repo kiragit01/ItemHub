@@ -10,10 +10,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.IO;
 using System.Security.Claims;
+using ItemHub.DbConnection.Interfaces;
 
 namespace ItemHub.Controllers
 {
-    public class ItemController(DataBaseContext db, IWebHostEnvironment webHostEnvironment) : Controller
+    public class ItemController(IItemDb dbI, IUserDb dbU, IWebHostEnvironment webHostEnvironment) : Controller
     {
 
 
@@ -21,7 +22,7 @@ namespace ItemHub.Controllers
         [Route("/item")]
         public async Task<ActionResult> ViewItem(Guid id)
         {
-            Item? item = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
+            var item = await dbI.GetItemNoTracking(id);
             if (item == null) return BadRequest("Что-то пошло не так :(");
             ViewBag.Item = item;
             return View();
@@ -47,20 +48,17 @@ namespace ItemHub.Controllers
             {
                 var userLogin = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (userLogin == null)  return Unauthorized();
-                var user = await db.Users
-                           .Include(u => u.Items)
-                           .FirstOrDefaultAsync(o => o.Login == userLogin);
+                var user = await dbU.GetUser(userLogin);
                 if (user == null)   return NotFound();
                 var id = Guid.NewGuid();
-                List<string> pathImages = await UploadImages(model.Images, user.Login, id);
+                var pathImages = await UploadImages(model.Images, user.Login, id);
                 
                 Item item = new(id, model.Title, model.Description, user.Login, pathImages, model.Price);
 
                 user.Items.Add(item);
-                await db.Items.AddAsync(item);
                 try
                 {
-                    await db.SaveChangesAsync();
+                    await dbI.AddItem(item);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -82,13 +80,12 @@ namespace ItemHub.Controllers
         [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
         public async Task<ActionResult> Edit(Guid id)
         {
-            Item? item = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
+            var item = await dbI.GetItemNoTracking(id);
             if (item == null) return BadRequest("Такого товара не существует :(");
             if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != item.Creator)
             {
                 return RedirectToAction("ViewItem", "Item", new { id });
             }
-
             ViewBag.Item = item;
             return View();
         }
@@ -101,7 +98,7 @@ namespace ItemHub.Controllers
         public async Task<ActionResult> Edit(Guid id, ItemModel model, List<string> savedImages)
         {
             if (!ModelState.IsValid) return View();
-            Item? itemDb = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
+            var itemDb = await dbI.GetItem(id);
             if (itemDb == null) return BadRequest("Такого товара не существует :(");
             
             // Обработка новых изображений
@@ -115,9 +112,7 @@ namespace ItemHub.Controllers
             itemDb.Price = model.Price;
             itemDb.UpdatedDate = DateTime.UtcNow;
             
-            db.Items.Update(itemDb);
-            await db.SaveChangesAsync();
-            
+            await dbI.UpdateItem(itemDb);
             return RedirectToAction("ViewItem", "Item", new { id });
         }
 
@@ -127,16 +122,14 @@ namespace ItemHub.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Delete(Guid id)
         {
-            Item? item = await db.Items.FirstOrDefaultAsync(o => o.Id == id);
+            var item = await dbI.GetItem(id);
             if (item == null) return BadRequest("Такого товара не существует :(");
             if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != item.Creator)
             {
                 return RedirectToAction("Index","Home");
             }
 
-            db.Items.Remove(item);
-            await db.SaveChangesAsync();
-            
+            await dbI.RemoveItem(item);
             return RedirectToAction("Index","Home");
         }
         
@@ -144,22 +137,19 @@ namespace ItemHub.Controllers
         [HttpPost]
         public IActionResult SavedItems(Guid id)
         {
-            // Получаем список сохранённых ID товаров
             Console.WriteLine(id);
-
-            // Вернём успешный ответ
             return Ok();
         }
         
         
 
         //Генератор рандомного набора символов
-        private static readonly Random random = new();
+        private static readonly Random Random = new();
         private static string RandomString(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
+                .Select(s => s[Random.Next(s.Length)]).ToArray());
         }
         
         //Создание путей к фото товара

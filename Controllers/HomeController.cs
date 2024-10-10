@@ -8,42 +8,44 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Security.Claims;
+using ItemHub.DbConnection.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 
 namespace ItemHub.Controllers
 {
 
-    public class HomeController : Controller
+    public class HomeController(ILogger<HomeController> logger, IUserDb dbU, IItemDb dbI) : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-        private readonly DataBaseContext db;
+        private readonly ILogger<HomeController> _logger = logger;
 
-        public HomeController(ILogger<HomeController> logger, DataBaseContext context)
+        private readonly int _pageSize = 2; // количество элементов на странице
+        public async Task<IActionResult> Index(int page = 1)
         {
-            _logger = logger;
-            db = context;
-        }
-
-
-        public async Task<IActionResult> Index()
-        {
-            ViewBag.Items = await ListItems();
+            var source = dbI.AllItems();
+            var count = await source.CountAsync();
+            var items = await source.Skip((page - 1) * _pageSize).Take(_pageSize).ToListAsync();
+ 
+            var pageViewModel = new PageViewModel(count, page, _pageSize);
+            var viewModel = new IndexViewModel(items, pageViewModel);
+            ViewBag.ViewPageItems = viewModel;
             return View();
         }
         
         [Route("my")]
         [Authorize(Roles = UserRoles.SELLER)]
-        public async Task<IActionResult> MyItems()
+        public async Task<IActionResult> MyItems(int page = 1)
         {
-            var user = await db.Users
-                .Include(user => user.Items)
-                .FirstOrDefaultAsync(u => u.Login == User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             if (user == null) return BadRequest("Войдите в аккаунт.");
-            ViewBag.Items = user.Items;
+
+            var userItems = user.Items;
+            var items = userItems.Skip((page - 1) * _pageSize).Take(_pageSize).ToList();
+            
+            var pageViewModel = new PageViewModel(userItems.Count, page, _pageSize);
+            var viewModel = new IndexViewModel(items, pageViewModel);
+            ViewBag.ViewPageItems = viewModel;
             return View();
         }
-
-        private async Task<List<Item>> ListItems() => await db.Items.ToListAsync();
 
         public IActionResult Privacy()
         {

@@ -1,3 +1,4 @@
+@using System.Security.Claims
 @model EditAccModel
 
 @{
@@ -28,26 +29,14 @@
                 Введите логин.
             </div>
             @Html.ValidationMessageFor(x => x.Login)
-            
         </div>
-        <div class="col-md-6">
+        <div class="col-12">
             <label for="inputEmail" class="form-label">Email</label>
             <input type="email" asp-for="Email" class="form-control" id="inputEmail" value="@user.Email" placeholder="name@example.com" required>
             <div class="invalid-feedback">
                 Введите email.
             </div>
             @Html.ValidationMessageFor(x => x.Email)
-        </div>
-        <div class="col-md-6">
-            <label for="password-input" class="form-label">Password</label>
-            <div class="position-relative has-validation">
-                <input type="password" asp-for="Password" class="form-control" id="password-input" value="@user.Password" required>
-                <a class="password-control" style="top: 10px;" onclick="return show_hide_password(this);"></a>
-                <div class="invalid-feedback">
-                    Введите пароль.
-                </div>
-                @Html.ValidationMessageFor(x => x.Password)
-            </div>
         </div>
         <div class="col-12">
             <label for="inputName" class="form-label">Name</label>
@@ -57,9 +46,157 @@
             </div>
             @Html.ValidationMessageFor(x => x.Name)
         </div>
-        <div class="col-12">
+        @* <div class="col-12"> *@
+        @*     <label for="password-input" class="form-label">Password</label> *@
+        @*     <div class="position-relative has-validation"> *@
+        @*         <input type="password" asp-for="Password" class="form-control" id="password-input" value="@user.Password" required> *@
+        @*         <a class="password-control" style="top: 10px;" onclick="return show_hide_password(this);"></a> *@
+        @*         <div class="invalid-feedback"> *@
+        @*             Введите пароль. *@
+        @*         </div> *@
+        @*         @Html.ValidationMessageFor(x => x.Password) *@
+        @*     </div> *@
+        @* </div> *@
+
+
+
+
+
+        <div class="col-6">
+            <a type="button" class="btn btn-secondary mt-3" data-bs-toggle="modal" data-bs-target="#exampleModal">Изменить пароль</a>
+        </div>
+        <div class="col-6 align-items-end">
             <button type="submit" class="btn btn-primary mt-3">Сохранить</button>
         </div>
     </form>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Обновить пароль</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form class="needs-validation" asp-controller="Account" asp-action="UpdatePassword" asp-anti-forgery="true" method="post" novalidate>
+                    <div class="modal-body">
+                        <div class="col">
+                            <label for="old-password-input" class="form-label">Старый пароль:</label>
+                            <div class="position-relative has-validation">
+                                <input type="password" name="oldPassword" class="form-control" id="old-password-input" required>
+                                <a class="password-control" style="top: 10px;" onclick="return show_hide_old_password(this);"></a>
+                                <div class="invalid-feedback">
+                                    Введите существующий пароль.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label for="new-password-input">Новый пароль:</label><br />
+                            <div class="position-relative has-validation">
+                                <input type="password" name="newPassword"
+                                       style="background-position: right calc(2em + .1875rem) center;"
+                                       class="form-control" 
+                                       id="new-password-input" 
+                                       oninput="return check();"
+                                       required>
+                                <a class="password-control" style="top: 10px;" id="img-hide"
+                                   onclick="return show_hide_new_password(this);"></a>
+                                <div class="invalid-feedback">
+                                    Введите новый пароль.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label for="new-password-input_confirm">Повторите новый пароль:</label><br />
+                            <div class="position-relative has-validation">
+                                <input type="password" name="newPasswordConfirm"
+                                       style="background-position: right calc(2em + .1875rem) center;"
+                                       class="form-control" 
+                                       id="new-password-input_confirm" oninput="return check();" required>
+                                <a class="password-control" style="top: 10px;" id="img-hide1"
+                                   onclick="return show_hide_new_password_confirm(this);"></a>
+                                <div class="invalid-feedback">
+                                    Повторите новый пароль.
+                                </div>
+                                <span id="message"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary" id="submit_password" disabled>Обновить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
+<script>
+    function check() {
+        var pass = document.getElementById('new-password-input').value,
+            pass_conf = document.getElementById('new-password-input_confirm').value,
+            mess = document.getElementById('message'),
+            pass_sub = document.getElementById('submit_password');
+        if (pass === pass_conf && pass !== "" && pass != null) {
+            mess.style.color = 'green';
+            mess.innerHTML = 'Совпадают';
+            pass_sub.disabled = false;
+        } else {
+            mess.style.color = 'red';
+            mess.innerHTML = 'Не совпадает';
+            pass_sub.disabled = true;
+        }
+    }
+    function show_hide_old_password(target) {
+        const input = document.getElementById('old-password-input');
+        if (input.getAttribute('type') === 'password') {
+            target.classList.add('view');
+            input.setAttribute('type', 'text');
+        } else {
+            target.classList.remove('view');
+            input.setAttribute('type', 'password');
+        }
+        return false;
+    }
+    function show_hide_new_password(target) {
+        const input = document.getElementById('new-password-input');
+        if (input.getAttribute('type') === 'password') {
+            target.classList.add('view');
+            input.setAttribute('type', 'text');
+        } else {
+            target.classList.remove('view');
+            input.setAttribute('type', 'password');
+        }
+        return false;
+    }
+    function show_hide_new_password_confirm(target) {
+        const input = document.getElementById('new-password-input_confirm');
+        if (input.getAttribute('type') === 'password') {
+            target.classList.add('view');
+            input.setAttribute('type', 'text');
+        } else {
+            target.classList.remove('view');
+            input.setAttribute('type', 'password');
+        }
+        return false;
+    }
+    (function () {
+        'use strict'
+
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.querySelectorAll('.needs-validation')
+
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+</script>

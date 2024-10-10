@@ -12,7 +12,7 @@ public class UserDb(DataBaseContext db) : IUserDb
 {
     public Task<User?> GetUser(string login) => db.Users
         .Include(user => user.Items)
-        .FirstOrDefaultAsync(u => u.Login == login)!;
+        .FirstOrDefaultAsync(u => u.Login == login);
 
     public async Task<DebugMessage> CheckUser(string? email, string? login)
     {
@@ -31,12 +31,12 @@ public class UserDb(DataBaseContext db) : IUserDb
     
     public async Task<User?> SingIn(string? login, string? password) 
         => await db.Users
-            .FirstOrDefaultAsync(u => (u.Email == login || u.Login == login) && u.Password == password);
+            .FirstOrDefaultAsync(u => (u.Email == login || u.Login == login) && u.HashedPassword == password);
 
-    public Task AddUser(User user)
+    public async Task AddUser(User user)
     {
-        db.Users.Add(user);
-        return db.SaveChangesAsync();
+        await db.Users.AddAsync(user);
+        await db.SaveChangesAsync();
     }
 
     public async Task UpdateUser(User user)
@@ -49,24 +49,6 @@ public class UserDb(DataBaseContext db) : IUserDb
     public async Task DeleteUser(User user)
     {
         db.Users.Remove(user);
-        await db.SaveChangesAsync();
-    }
-    
-    
-    
-    
-    
-    public Task<Item?> UserItems(Guid id) => db.Items.FirstOrDefaultAsync(o => o.Id == id);
-
-    public async Task UserItems(Item item)
-    {
-        db.Items.Update(item);
-        await db.SaveChangesAsync();
-    }
-
-    public async Task RemoveItems(Item item)
-    {
-        db.Items.Remove(item);
         await db.SaveChangesAsync();
     }
 }

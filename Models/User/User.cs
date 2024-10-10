@@ -8,31 +8,31 @@ namespace ItemHub.Models.User
         [Key]
         public Guid Id { get; set; }
         public string Login { get; set; }
-        public string Password { get; set; }
-        public string Name { get; set; }
         public string Email { get; set; }
-        public int Age { get; set; }
-
+        public string Name { get; set; }
+        public string HashedPassword { get; set; }
+        public string Salt { get; set; }
+        public string Avatar { get; set; }
+        public string? Description { get; set; }
+        public string? Phone { get; set; }
+        
         public List<string> Roles { get; set; } = [];
-        public List<Item> Items { get; set; } = [];
+        public List<Item> Items { get; set; } = []; /*Для Продавца*/
+        public List<Guid> FavoritedItemsId { get; set; } = []; /*Для Покупателя*/
 
-        public User(string login, string password, string name, string email, int age)
+        public User(string login, string hashedPassword, string name, string email)
         {
             Id = Guid.NewGuid();
             Login = login;
-            Password = password;
+            HashedPassword = hashedPassword;
             Name = name;
             Email = email;
-            Age = age;
         }
-        public User(string login, string password, string name, string email, int age, string[] roles) : this(login, password, name, email, age)
+        public User(string login, string password, string name, string email, string[] roles) : this(login, password, name, email)
         {
             Roles.AddRange(roles);
         }
 
         public void AddRoles(string[] roles) => Roles.AddRange(roles);
-
-        public void AddItems(Item item) => Items.Add(item);
-
     }
 }

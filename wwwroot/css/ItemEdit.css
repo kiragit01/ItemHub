@@ -106,22 +106,20 @@ input[type="number"]::placeholder {
 .input-div {
     width: 100%;
     height: 250px;
-    border-radius: 5px;
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
     border: 2px dashed #0029748c;
-    background-color: white;
+    background-color: var(--bs-body-bg);
     position: relative;
     border-bottom: 0;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
+    border-radius: 5px 5px 0 0;
     transition: all ease 0.5s;
 }
 
 .input-div .browse {
-    color: black;
+    color: white;
     font-weight: bold;
     transition: all ease 0.5s;
 }
@@ -143,12 +141,10 @@ input[type="number"]::placeholder {
     flex-wrap: wrap;
     gap: 5px;
     position: relative;
-    border-radius: 5px;
     border: 2px solid #0029748c;
-    background-color: white;
+    background-color: var(--bs-body-bg);
     margin-top: 0;
-    border-top-right-radius: 0;
-    border-top-left-radius: 0;
+    border-radius: 0 0 5px 5px;
 }
 
 .saved-div .image,
@@ -196,12 +192,12 @@ input[type="number"]::placeholder {
 }
 
 .input-div._active .browse{
-    color: #ffffff;
+    color: var(--bs-body-bg);
 }
 
 
 .input-div._active {
-    color: #ffffff;
+    color: var(--bs-body-bg);
     background-color: #3d6affc4;
 }
 

@@ -11,8 +11,4 @@ public interface IUserDb
     public Task<User?> SingIn(string login, string password);
     public Task UpdateUser(User user);
     public Task DeleteUser(User user);
-    
-    public Task<Item?> UserItems(Guid id);
-    public Task UserItems(Item item);
-    public Task RemoveItems(Item item);
 }

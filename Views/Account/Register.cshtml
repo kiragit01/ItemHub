@@ -26,7 +26,8 @@
                     <input type="password" asp-for="Password"
                            style="background-position: right calc(2em + .1875rem) center;" 
                            class="form-control" id="password-input" required>
-                    <a class="password-control" style="top: 10px;" onclick="return show_hide_password(this);"></a>
+                    <a class="password-control" style="top: 10px;" id="img-hide"
+                       onclick="return show_hide_password(this);"></a>
                     <div class="invalid-feedback">
                         Введите пароль.
                     </div>
@@ -39,7 +40,8 @@
                     <input type="password" asp-for="ConfirmPassword" 
                            style="background-position: right calc(2em + .1875rem) center;" 
                            class="form-control" id="password-input_confirm" required>
-                    <a class="password-control" style="top: 10px;" onclick="return show_hide_password_confirm(this);"></a>
+                    <a class="password-control" style="top: 10px;" id="img-hide1"
+                       onclick="return show_hide_password_confirm(this);"></a>
                     <div class="invalid-feedback">
                         Введите пароль.
                     </div>
