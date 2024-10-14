@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Security.Claims;
-using ItemHub.DbConnection.Interfaces;
+using ItemHub.Repository.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 
 namespace ItemHub.Controllers
@@ -38,11 +38,39 @@ namespace ItemHub.Controllers
             var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             if (user == null) return BadRequest("Войдите в аккаунт.");
 
-            var userItems = user.Items;
+            var userItems = user.CustomItems;
             var items = userItems.Skip((page - 1) * _pageSize).Take(_pageSize).ToList();
             
             var pageViewModel = new PageViewModel(userItems.Count, page, _pageSize);
             var viewModel = new IndexViewModel(items, pageViewModel);
+            ViewBag.ViewPageItems = viewModel;
+            return View();
+        }
+        
+        [Route("favorite")]
+        [Authorize(Roles = UserRoles.CUSTOMER)]
+        public async Task<IActionResult> FavoritedItems(int page = 1)
+        {
+            var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            if (user == null) return BadRequest("Войдите в аккаунт.");
+
+            var favoritedId = user.FavoritedItemsId;
+            var favoritedItems = new List<Item>();
+            var deleteFavorited = new List<Guid>();
+            foreach (var id in favoritedId)
+            {
+                var item = await dbI.GetItemNoTracking(id);
+                if (item != null) favoritedItems.Add(item);
+                else deleteFavorited.Add(id);
+            }
+            foreach (var id in deleteFavorited)
+            {
+                user.FavoritedItemsId.Remove(id);
+            }
+            var items = favoritedItems.Skip((page - 1) * _pageSize).Take(_pageSize).ToList();
+            
+            var pageViewModel = new PageViewModel(favoritedItems.Count, page, _pageSize);
+            var viewModel = new IndexViewModel(items!, pageViewModel);
             ViewBag.ViewPageItems = viewModel;
             return View();
         }

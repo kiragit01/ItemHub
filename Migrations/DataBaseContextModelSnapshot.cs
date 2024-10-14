@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using ItemHub.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -13,11 +12,9 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ItemHub.Migrations
 {
     [DbContext(typeof(DataBaseContext))]
-    [Migration("20240917164104_itemhub")]
-    partial class itemhub
+    partial class DataBaseContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,10 +43,14 @@ namespace ItemHub.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
-                    b.Property<int?>("Price")
+                    b.Property<int>("Price")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("Published")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedDate")
@@ -71,10 +72,25 @@ namespace ItemHub.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Age")
-                        .HasColumnType("integer");
+                    b.Property<string>("Avatar")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DateTimeCreateAccount")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
 
                     b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<List<Guid>>("FavoritedItemsId")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
+                    b.Property<string>("HashedPassword")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -86,13 +102,16 @@ namespace ItemHub.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Password")
-                        .IsRequired()
+                    b.Property<string>("Phone")
                         .HasColumnType("text");
 
                     b.Property<List<string>>("Roles")
                         .IsRequired()
                         .HasColumnType("text[]");
+
+                    b.Property<byte[]>("Salt")
+                        .IsRequired()
+                        .HasColumnType("bytea");
 
                     b.HasKey("Id");
 
@@ -102,13 +121,13 @@ namespace ItemHub.Migrations
             modelBuilder.Entity("ItemHub.Models.OnlyItem.Item", b =>
                 {
                     b.HasOne("ItemHub.Models.User.User", null)
-                        .WithMany("Items")
+                        .WithMany("CustomItems")
                         .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("ItemHub.Models.User.User", b =>
                 {
-                    b.Navigation("Items");
+                    b.Navigation("CustomItems");
                 });
 #pragma warning restore 612, 618
         }

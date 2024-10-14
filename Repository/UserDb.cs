@@ -1,17 +1,17 @@
 using ItemHub.Data;
-using ItemHub.DbConnection.Interfaces;
-using ItemHub.Models.OnlyItem;
+using ItemHub.DbConnection;
 using ItemHub.Models.User;
+using ItemHub.Repository.Interfaces;
+using ItemHub.Utilities;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
-namespace ItemHub.DbConnection;
+namespace ItemHub.Repository;
 
 public class UserDb(DataBaseContext db) : IUserDb
 {
-    public Task<User?> GetUser(string login) => db.Users
-        .Include(user => user.Items)
+    public Task<User?> GetUser(string? login) => db.Users
+        .Include(user => user.CustomItems)
         .FirstOrDefaultAsync(u => u.Login == login);
 
     public async Task<DebugMessage> CheckUser(string? email, string? login)
@@ -28,10 +28,14 @@ public class UserDb(DataBaseContext db) : IUserDb
         }
         return DebugMessage.Success;
     }
-    
-    public async Task<User?> SingIn(string? login, string? password) 
-        => await db.Users
-            .FirstOrDefaultAsync(u => (u.Email == login || u.Login == login) && u.HashedPassword == password);
+
+    public async Task<User?> SingIn(string login, string password)
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Login == login);
+        if (user == null) return null;
+        var checkPassword = HashedPassword.Hashed(password, user.Salt);
+        return user.HashedPassword == checkPassword ? user : null;
+    }
 
     public async Task AddUser(User user)
     {

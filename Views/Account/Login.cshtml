@@ -7,12 +7,15 @@
 
     <form asp-action="Login" asp-controller="Account" asp-anti-forgery="true" method="post" class="row mt-3 needs-validation" novalidate>
         <div class="validation" asp-validation-summary="ModelOnly"></div>
-        <div class="col-sm-3 m-auto">
+        <div class="col-lg-3 col-sm-7 m-auto">
             <div>
-                <label asp-for="Login">Логин или Email:</label><br />
-                <input type="text" asp-for="Login" class="form-control" required />
-                <div class="invalid-feedback">
-                    Введите логин или email.
+                <label asp-for="Login">Логин:</label><br />
+                <div class="input-group has-validation">
+                    <div class="input-group-text">@@</div>
+                    <input type="text" asp-for="Login" class="form-control" required />
+                    <div class="invalid-feedback">
+                        Введите логин.
+                    </div>
                 </div>
                 @Html.ValidationMessageFor(x => x.Login)
             </div>
@@ -22,7 +25,8 @@
                     <input type="password" asp-for="Password"
                            style="background-position: right calc(2em + .1875rem) center;" 
                            class="form-control" id="password-input" required>
-                    <a class="password-control" style="top: 10px;" onclick="return show_hide_password(this);" id="img-hide"></a>
+                    <a class="password-control" style="top: 10px;" 
+                       onclick="return toggle_password_visibility(this, 'password-input');" id="img-hide"></a>
                     <div class="invalid-feedback">
                         Введите пароль.
                     </div>
@@ -38,25 +42,5 @@
     <a asp-action="Register" asp-controller="Account">Создать аккаунт</a>
 </div>
 
-<script>
-    // Example starter JavaScript for disabling form submissions if there are invalid fields
-    (function () {
-        'use strict'
-
-        // Fetch all the forms we want to apply custom Bootstrap validation styles to
-        var forms = document.querySelectorAll('.needs-validation')
-
-        // Loop over them and prevent submission
-        Array.prototype.slice.call(forms)
-            .forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault()
-                        event.stopPropagation()
-                    }
-
-                    form.classList.add('was-validated')
-                }, false)
-            })
-    })()
-</script>
+<script src="~/js/needs-validation.js" async></script>
+<script src="~/js/password_visibility.js" async></script>

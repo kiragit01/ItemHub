@@ -7,7 +7,9 @@ using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using System.Text;
 using ItemHub.DbConnection;
-using ItemHub.DbConnection.Interfaces;
+using ItemHub.Models.Auth;
+using ItemHub.Repository;
+using ItemHub.Repository.Interfaces;
 
 
 var builder = WebApplication.CreateBuilder(args);

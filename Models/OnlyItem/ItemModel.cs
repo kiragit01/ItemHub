@@ -12,5 +12,6 @@ namespace ItemHub.Models.OnlyItem
         [Required(ErrorMessage = "Введите цену")]
         [Range(1, 100000000, ErrorMessage = "Недопустимая цена")]
         public required int Price { get; set; }
+        public bool Published { get; set; }
     }
 }

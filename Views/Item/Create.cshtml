@@ -34,30 +34,17 @@
                     </div>
                 </div>
                 @Html.ValidationMessageFor(x => x.Price)
+                <div>
+                    <div class="form-check m-auto">
+                        <input asp-for="Published" class="form-check-input" type="checkbox" id="gridCheck">
+                        <label class="form-check-label" for="gridCheck">
+                            Сохранить как черновик?
+                        </label>
+                    </div>
+                </div>
             </div>
             <input class="btn btn-primary" type="submit" value="Загрузить" />
         </div>
     </form>
 </div>
-<script>
-    // Example starter JavaScript for disabling form submissions if there are invalid fields
-    (function () {
-        'use strict'
-
-        // Fetch all the forms we want to apply custom Bootstrap validation styles to
-        var forms = document.querySelectorAll('.needs-validation')
-
-        // Loop over them and prevent submission
-        Array.prototype.slice.call(forms)
-            .forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault()
-                        event.stopPropagation()
-                    }
-
-                    form.classList.add('was-validated')
-                }, false)
-            })
-    })()
-</script>
+<script src="~/js/needs-validation.js" async></script>

@@ -2,16 +2,30 @@
 @{
     ViewData["Title"] = Model.Login;
 }
-
+<style>textarea{
+        min-height: 150px!important;
+        max-height: 250px;}</style>
 <div class="container col-xl-7 mt-5">
     <h1>Account</h1>
     <div class="row g-3">
         <div class="row g-2">
-            <div class="col-md">
-                <div class="form-floating">
-                    <input type="text" class="form-control disabled" id="LoginInput"
-                           value="@Model.Login" readonly>
-                    <label for="LoginInput">Login</label>
+            <div style="width: 150px;" class="row g-2">
+                <img style="width: 130px; object-fit: cover;" src="@Model.Avatar" alt="Profile" class="rounded-circle">
+            </div>
+            <div class="row g-2 col-md">
+                <div>
+                    <div class="form-floating">
+                        <input type="text" class="form-control disabled" id="NameInput"
+                               value="@Model.Name" readonly>
+                        <label for="NameInput">Name</label>
+                    </div>
+                </div>
+                <div>
+                    <div class="form-floating">
+                        <input type="text" class="form-control disabled" id="LoginInput"
+                               value="@Model.Login" readonly>
+                        <label for="LoginInput">Login</label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -27,19 +41,18 @@
         <div class="row g-2">
             <div class="col-md">
                 <div class="form-floating">
-                    <input type="password" class="form-control disabled" id="password-input" 
-                           value="@Model.HashedPassword" readonly >
-                    <label for="password-input">Password</label>
-                    <a class="password-control" onclick="return show_hide_password(this);"></a>
+                    <textarea type="text" rows="4" class="form-control disabled" id="DescriptionInput" 
+                        readonly>@Model.Description</textarea>
+                    <label for="NameInput">Description</label>
                 </div>
             </div>
         </div>
         <div class="row g-2">
             <div class="col-md">
                 <div class="form-floating">
-                    <input type="text" class="form-control disabled" id="NameInput"
-                           value="@Model.Name" readonly>
-                    <label for="NameInput">Name</label>
+                    <input type="tel" class="form-control disabled" id="PhoneInput"
+                           value="@Model.Phone" readonly>
+                    <label for="NameInput">Phone</label>
                 </div>
             </div>
         </div>

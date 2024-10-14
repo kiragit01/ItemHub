@@ -1,16 +1,10 @@
-﻿using ItemHub.Data;
-using ItemHub.Models.OnlyItem;
+﻿using ItemHub.Models.OnlyItem;
 using ItemHub.Models.User;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.IO;
 using System.Security.Claims;
-using ItemHub.DbConnection.Interfaces;
+using ItemHub.Repository.Interfaces;
 
 namespace ItemHub.Controllers
 {
@@ -46,16 +40,14 @@ namespace ItemHub.Controllers
         {
             if(ModelState.IsValid)
             {
-                var userLogin = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (userLogin == null)  return Unauthorized();
-                var user = await dbU.GetUser(userLogin);
-                if (user == null)   return NotFound();
+                var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                if (user == null)   return BadRequest("Вы не вошли в аккаунт");
                 var id = Guid.NewGuid();
                 var pathImages = await UploadImages(model.Images, user.Login, id);
                 
-                Item item = new(id, model.Title, model.Description, user.Login, pathImages, model.Price);
+                Item item = new(id, model.Title, model.Description, user.Login, pathImages, model.Price, !model.Published);
 
-                user.Items.Add(item);
+                user.CustomItems.Add(item);
                 try
                 {
                     await dbI.AddItem(item);
@@ -128,19 +120,74 @@ namespace ItemHub.Controllers
             {
                 return RedirectToAction("Index","Home");
             }
-
             await dbI.RemoveItem(item);
             return RedirectToAction("Index","Home");
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = UserRoles.CUSTOMER)]
+        public async Task<IActionResult> FavoritedItems(Guid id)
+        {
+            var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            if (user == null) return BadRequest("Вы не вошли в аккаунт");
+            if (!user.FavoritedItemsId.Remove(id))
+                user.FavoritedItemsId.Add(id);
+            await dbU.UpdateUser(user);
+            return Ok();
+        }
+
+        
+        [HttpPost]
+        [Authorize(Roles = UserRoles.CUSTOMER)]
+        [Route("favcount")]
+        public async Task<int> FavoritedItemsCount()
+        {
+            var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            return user != null ? user.FavoritedItemsId.Count : 0;
         }
         
         
         [HttpPost]
-        public IActionResult SavedItems(Guid id)
+        [Authorize(Roles = UserRoles.CUSTOMER)]
+        [Route("GetFavoritedItems")]
+        public async Task<List<Guid>> GetFavoritedItems()
         {
-            Console.WriteLine(id);
+            var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            if (user == null) return new List<Guid>();
+            var favoritedId = user.FavoritedItemsId;
+            var favoritedItems = new List<Guid>();
+            var deleteFavorited = new List<Guid>();
+            foreach (var id in favoritedId)
+            {
+                if (await dbI.GetItemNoTracking(id) != null) 
+                    favoritedItems.Add(id);
+                else deleteFavorited.Add(id);
+            }
+            foreach (var id in deleteFavorited)
+            {
+                user.FavoritedItemsId.Remove(id);
+            }
+            return favoritedItems;
+        }
+
+
+
+        [HttpPost]
+        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
+        public async Task<IActionResult> PublishedItem(Guid id)
+        {
+            var item = await dbI.GetItem(id);
+            if (item == null) return BadRequest("Такого товара не существует :(");
+            if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != item.Creator)
+            {
+                return BadRequest("Это не ваш товар.");
+            }
+            item.Published = !item.Published;
+            await dbI.UpdateItem(item);
             return Ok();
         }
-        
         
 
         //Генератор рандомного набора символов
@@ -170,7 +217,7 @@ namespace ItemHub.Controllers
                 var fullPath = Path.Combine(webHostEnvironment.WebRootPath, pathForList);
                 pathImages.Add(pathForList);
                 // сохраняем файл
-                await using var fileStream = new FileStream(fullPath, FileMode.Create);
+                var fileStream = new FileStream(fullPath, FileMode.Create);
                 await file.CopyToAsync(fileStream);
             }
             return pathImages;

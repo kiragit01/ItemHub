@@ -16,7 +16,7 @@ namespace ItemHub.Models.OnlyItem
         public int Price { get; set; }
         public bool Published { get; set; }
 
-        public Item(Guid id, string title, string? description, string creator, List<string> pathImages, int price)
+        public Item(Guid id, string title, string? description, string creator, List<string> pathImages, int price, bool published)
         {
             Id = id;
             Title = title;
@@ -25,6 +25,7 @@ namespace ItemHub.Models.OnlyItem
             CreatedDate = DateTime.UtcNow;
             PathImages = pathImages;
             Price = price;
+            Published = published;
         }
         public void UpdateDate() => UpdatedDate = DateTime.UtcNow;
     }

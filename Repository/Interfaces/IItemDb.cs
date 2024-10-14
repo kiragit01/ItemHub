@@ -1,6 +1,6 @@
 using ItemHub.Models.OnlyItem;
 
-namespace ItemHub.DbConnection.Interfaces;
+namespace ItemHub.Repository.Interfaces;
 
 public interface IItemDb
 {

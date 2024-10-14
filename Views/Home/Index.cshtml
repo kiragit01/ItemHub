@@ -36,26 +36,29 @@
 
 @foreach (var item in ViewBag.ViewPageItems.Items)
 {
-    <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" aria-labelledby="exampleModalLabel-@item.Id" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel-@item.Id">Удаление</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Вы уверены, что хотите удалить "@item.Title"?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <form asp-controller="Item" asp-action="Delete">
-                        <input name="id" type="text" value="@item.Id" class="visually-hidden">
-                        <button type="submit" class="btn btn-primary">Да, удалить</button>
-                    </form>
+    @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
+    {
+        <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" aria-labelledby="exampleModalLabel-@item.Id" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel-@item.Id">Удаление</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите удалить "@item.Title"?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <form asp-controller="Item" asp-action="Delete">
+                            <input name="id" type="text" value="@item.Id" class="visually-hidden">
+                            <button type="submit" class="btn btn-primary">Да, удалить</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    }
     <div class="card mb-3 col-md-8 m-auto">
         <div class="row ">
             <div class="col"> 
@@ -104,8 +107,8 @@
                 }
             </div>
             <div class="col-md-8">
-                <a href="/item?id=@item.Id" class="text-decoration-none">
-                    <div class="card-body h-100 d-grid align-content-between">
+                <div class="card-body h-100 d-grid align-content-between">
+                    <a href="/item?id=@item.Id" class="text-decoration-none">
                         <div class="custom-color">
                             <div class="d-flex justify-content-between">
                                 <h5 class="card-title">@item.Title</h5>
@@ -113,7 +116,9 @@
                             </div>
                             <p class="card-text line-clamp-3">@item.Description</p>
                         </div>
-                        <div class="d-flex justify-content-between align-items-end">
+                    </a>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <a href="/item?id=@item.Id" class="text-decoration-none">
                             <p class="card-text mb-0">
                                 <small class="text-muted">@@@item.Creator</small><br/>
                                 @if (item.UpdatedDate == null)
@@ -125,28 +130,32 @@
                                     <small class="text-muted">Обновлено: @item.UpdatedDate.ToLocalTime()</small>
                                 }
                             </p>
-                            @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
-                            {
-                                <div class="d-flex">
-                                    <p class="card-text mb-0">
-                                        <a class="text-decoration-underline cursor-pointer link-danger"
-                                           data-bs-toggle="modal" data-bs-target="#exampleModal-@item.Id">Delete</a>
-                                    </p>
-                                    <p class="card-text ms-lg-5">
-                                        <a class="text-decoration-underline" href="/edit?id=@item.Id">Edit</a>
-                                    </p>
-                                </div>
-                            }
-                            @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
-                            {
-                                <form asp-action="SavedItems" asp-controller="Item" method="post" class="save-form">
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                    <a type="button" class="btn btn-outline-success btn-sm save-button" data-id="@item.Id">Сохранить</a>
-                                </form>
-                            }
-                        </div>
+                        </a>
+                        @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
+                        {
+                            <div class="btn-group dropup dropup-center">
+                                <a href="/edit?id=@item.Id" class="btn btn-primary btn-sm" type="button">
+                                    Редактировать
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="visually-hidden">Toggle Dropdown</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item link-danger" data-bs-toggle="modal" 
+                                           data-bs-target="#exampleModal-@item.Id">Удалить</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Item" asp-action="PublishedItem">Скрыть</a></li>
+                                </ul>
+                            </div>
+                        }
+                        @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
+                        {
+                            <form asp-action="FavoritedItems" asp-controller="Item" method="post" class="save-form">
+                                <input type="hidden" name="id" value="@item.Id" class="item-id"/>
+                                <a type="button" class="btn btn-outline-success btn-sm save-button" data-id="@item.Id">Сохранить</a>
+                            </form>
+                        }
                     </div>
-                </a>
+                </div>
             </div>
         </div>
     </div>
@@ -155,6 +164,14 @@
 {
     <p class="text-center text-muted">Нет ни одного товара.</p>
 }
+@if (ViewBag.ViewPageItems.PageViewModel.TotalPages > 1)
+{
 <div class="justify-content-center d-flex">
     <page-link page-model="ViewBag.ViewPageItems.PageViewModel" page-action="Index"></page-link>
 </div>
+}
+
+@if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
+{
+    <script src="~/js/favorite-items.js" ></script>
+}

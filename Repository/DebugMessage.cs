@@ -1,4 +1,4 @@
-namespace ItemHub.DbConnection;
+namespace ItemHub.Repository;
 
 public enum DebugMessage
 {
