@@ -13,6 +13,8 @@ namespace ItemHub.Controllers
 {
     public class AccountController(IUserDb dbU, IItemDb dbI, IWebHostEnvironment webHostEnvironment) : Controller
     {
+        private readonly string _webRootPath = webHostEnvironment.WebRootPath;
+        
         [HttpGet]
         [Route("register")]
         public IActionResult Register() => View();
@@ -24,7 +26,7 @@ namespace ItemHub.Controllers
         [HttpPost]
         [Route("register")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterModel model, IFormFileCollection test)
+        public async Task<IActionResult> Register(RegisterModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -43,7 +45,7 @@ namespace ItemHub.Controllers
                     return View();
             }
 
-            var avatar = await UploadAvatar(model.Avatar, model.Login);
+            var avatar = await UploadFiles.UploadAvatar(model.Avatar, model.Login, _webRootPath);
             var salt = HashedPassword.GeneratedSalt;
             var hashedPassword = HashedPassword.Hashed(model.Password, salt);
             var user = new User(model.Name, model.Login, model.Email, hashedPassword, salt, avatar);
@@ -116,13 +118,12 @@ namespace ItemHub.Controllers
                 ModelState.AddModelError("", "Этот Email уже зарегистрирован");
                 return View();
             }
-
-            if (check == DebugMessage.ErrorLogin && model.Login != User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
+            if (check == DebugMessage.ErrorLogin &&
+                model.Login != User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
             {
                 ModelState.AddModelError("", "Этот логин занят");
                 return View();
             }
-
             var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             if (user == null) return RedirectToAction("Index", "Home");
 
@@ -134,7 +135,9 @@ namespace ItemHub.Controllers
                 await dbI.UpdateItem(itemDb);
             }
 
-            var avatar = model.Avatar == null ? user.Avatar : await UploadAvatar(model.Avatar, model.Login);
+            var avatar = model.Avatar == null 
+                ? user.Avatar 
+                : await UploadFiles.UploadAvatar(model.Avatar, model.Login, _webRootPath);
             user.Name = model.Name;
             user.Login = model.Login;
             user.Email = model.Email;
@@ -207,24 +210,7 @@ namespace ItemHub.Controllers
             return RedirectToAction("Account", "Account");  
         }
         
-        //Создание пути к Аватарке
-        private async Task<string> UploadAvatar(IFormFile? file, string userLogin)
-        {
-            if (file == null) return "images/NoAvatar.png";
-            // создаем папку для хранения файлов
-            Directory.CreateDirectory( Path.Combine(webHostEnvironment.WebRootPath, "images", userLogin));
-            var type = "." + file.ContentType.Split("/")[1];
-            // путь к файлу
-            var pathImages = Path.Combine("images", userLogin, "Avatar" + type);
-            var fullPath = Path.Combine(webHostEnvironment.WebRootPath, pathImages);
-            // сохраняем файл
-            var fileStream = new FileStream(fullPath, FileMode.Create);
-            await file.CopyToAsync(fileStream);
-            return pathImages;
-        }
         
-
-
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

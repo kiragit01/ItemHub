@@ -8,27 +8,26 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Security.Claims;
+using ItemHub.Models.Pages;
 using ItemHub.Repository.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 
 namespace ItemHub.Controllers
 {
 
-    public class HomeController(ILogger<HomeController> logger, IUserDb dbU, IItemDb dbI) : Controller
+    public class HomeController(IUserDb dbU, IItemDb dbI) : Controller
     {
-        private readonly ILogger<HomeController> _logger = logger;
+        private const int PageSize = 2; // количество элементов на странице
 
-        private readonly int _pageSize = 2; // количество элементов на странице
         public async Task<IActionResult> Index(int page = 1)
         {
             var source = dbI.AllItems();
             var count = await source.CountAsync();
-            var items = await source.Skip((page - 1) * _pageSize).Take(_pageSize).ToListAsync();
+            var items = await source.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync();
  
-            var pageViewModel = new PageViewModel(count, page, _pageSize);
+            var pageViewModel = new PageViewModel(count, page, PageSize);
             var viewModel = new IndexViewModel(items, pageViewModel);
-            ViewBag.ViewPageItems = viewModel;
-            return View();
+            return View(viewModel);
         }
         
         [Route("my")]
@@ -39,12 +38,11 @@ namespace ItemHub.Controllers
             if (user == null) return BadRequest("Войдите в аккаунт.");
 
             var userItems = user.CustomItems;
-            var items = userItems.Skip((page - 1) * _pageSize).Take(_pageSize).ToList();
+            var items = userItems.Skip((page - 1) * PageSize).Take(PageSize).ToList();
             
-            var pageViewModel = new PageViewModel(userItems.Count, page, _pageSize);
+            var pageViewModel = new PageViewModel(userItems.Count, page, PageSize);
             var viewModel = new IndexViewModel(items, pageViewModel);
-            ViewBag.ViewPageItems = viewModel;
-            return View();
+            return View(viewModel);
         }
         
         [Route("favorite")]
@@ -54,25 +52,25 @@ namespace ItemHub.Controllers
             var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             if (user == null) return BadRequest("Войдите в аккаунт.");
 
-            var favoritedId = user.FavoritedItemsId;
             var favoritedItems = new List<Item>();
-            var deleteFavorited = new List<Guid>();
-            foreach (var id in favoritedId)
+            var validItemIds = new List<Guid>();
+
+            foreach (var id in user.FavoritedItemsId)
             {
                 var item = await dbI.GetItemNoTracking(id);
-                if (item != null) favoritedItems.Add(item);
-                else deleteFavorited.Add(id);
+                if (item == null) continue;
+                favoritedItems.Add(item);
+                validItemIds.Add(id);
             }
-            foreach (var id in deleteFavorited)
-            {
-                user.FavoritedItemsId.Remove(id);
-            }
-            var items = favoritedItems.Skip((page - 1) * _pageSize).Take(_pageSize).ToList();
+
+            user.FavoritedItemsId = validItemIds;
+            await dbU.UpdateUser(user);
+
+            var items = favoritedItems.Skip((page - 1) * PageSize).Take(PageSize).ToList();
             
-            var pageViewModel = new PageViewModel(favoritedItems.Count, page, _pageSize);
+            var pageViewModel = new PageViewModel(favoritedItems.Count, page, PageSize);
             var viewModel = new IndexViewModel(items!, pageViewModel);
-            ViewBag.ViewPageItems = viewModel;
-            return View();
+            return View(viewModel);
         }
 
         public IActionResult Privacy()

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using ItemHub.Models;
+using ItemHub.Models.Pages;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.Routing;

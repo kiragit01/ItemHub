@@ -51,12 +51,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const itemId = button.getAttribute('data-id');
 
         button.addEventListener('click', function () {
-            const form = this.closest('form');
-            const formData = new FormData(form);
-
-            fetch(form.action, {
-                method: form.method,
-                body: formData
+            fetch('/FavoritedItems', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: itemId })
             })
                 .then(response => {
                     if (response.ok) {

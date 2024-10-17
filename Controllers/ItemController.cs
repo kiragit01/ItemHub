@@ -5,12 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using ItemHub.Repository.Interfaces;
+using ItemHub.Utilities;
 
 namespace ItemHub.Controllers
 {
     public class ItemController(IItemDb dbI, IUserDb dbU, IWebHostEnvironment webHostEnvironment) : Controller
     {
-
+        private readonly string _webRootPath = webHostEnvironment.WebRootPath;
 
         // GET: ItemController
         [Route("/item")]
@@ -43,7 +44,7 @@ namespace ItemHub.Controllers
                 var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 if (user == null)   return BadRequest("Вы не вошли в аккаунт");
                 var id = Guid.NewGuid();
-                var pathImages = await UploadImages(model.Images, user.Login, id);
+                var pathImages = await UploadFiles.UploadItemImages(model.Images, user.Login, _webRootPath, id);
                 
                 Item item = new(id, model.Title, model.Description, user.Login, pathImages, model.Price, !model.Published);
 
@@ -94,7 +95,7 @@ namespace ItemHub.Controllers
             if (itemDb == null) return BadRequest("Такого товара не существует :(");
             
             // Обработка новых изображений
-            var pathImages = await UploadImages(model.Images, itemDb.Creator, id);
+            var pathImages = await UploadFiles.UploadItemImages(model.Images, itemDb.Creator, _webRootPath, id);
             pathImages.AddRange(savedImages);
             if(pathImages.Count != 1 && pathImages[0] == "images/NoImage.png") pathImages.RemoveAt(0);
             
@@ -126,14 +127,14 @@ namespace ItemHub.Controllers
 
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Authorize(Roles = UserRoles.CUSTOMER)]
-        public async Task<IActionResult> FavoritedItems(Guid id)
+        [Route("FavoritedItems")]
+        public async Task<IActionResult> FavoritedItems([FromBody] ItemGuidRequest request)
         {
             var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             if (user == null) return BadRequest("Вы не вошли в аккаунт");
-            if (!user.FavoritedItemsId.Remove(id))
-                user.FavoritedItemsId.Add(id);
+            if (!user.FavoritedItemsId.Remove(request.Id))
+                user.FavoritedItemsId.Add(request.Id);
             await dbU.UpdateUser(user);
             return Ok();
         }
@@ -155,95 +156,57 @@ namespace ItemHub.Controllers
         public async Task<List<Guid>> GetFavoritedItems()
         {
             var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            if (user == null) return new List<Guid>();
-            var favoritedId = user.FavoritedItemsId;
-            var favoritedItems = new List<Guid>();
-            var deleteFavorited = new List<Guid>();
-            foreach (var id in favoritedId)
+            if (user == null) return [];
+            var validItems = new List<Guid>();
+
+            foreach (var id in user.FavoritedItemsId.ToList())
             {
-                if (await dbI.GetItemNoTracking(id) != null) 
-                    favoritedItems.Add(id);
-                else deleteFavorited.Add(id);
+                var item = await dbI.GetItemNoTracking(id);
+                if (item != null) validItems.Add(id);
+                else user.FavoritedItemsId.Remove(id);
             }
-            foreach (var id in deleteFavorited)
-            {
-                user.FavoritedItemsId.Remove(id);
-            }
-            return favoritedItems;
+            await dbU.UpdateUser(user); 
+            return validItems;
         }
 
 
 
         [HttpPost]
-        [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
-        public async Task<IActionResult> PublishedItem(Guid id)
+        [Route("PublishedItem")]
+        public async Task<IActionResult> PublishedItem([FromBody] ItemGuidRequest request)
         {
-            var item = await dbI.GetItem(id);
-            if (item == null) return BadRequest("Такого товара не существует :(");
+            var item = await dbI.GetItem(request.Id);
+            if (item == null) return BadRequest("Такого товара не существует.");
             if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != item.Creator)
             {
                 return BadRequest("Это не ваш товар.");
             }
             item.Published = !item.Published;
             await dbI.UpdateItem(item);
-            return Ok();
+            return Ok(!item.Published);
         }
         
-
-        //Генератор рандомного набора символов
-        private static readonly Random Random = new();
-        private static string RandomString(int length)
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[Random.Next(s.Length)]).ToArray());
-        }
-        
-        //Создание путей к фото товара
-        private async Task<List<string>> UploadImages(IFormFileCollection? files, string userLogin, Guid id)
-        {
-            if (files == null) return ["images/NoImage.png"];
-            
-            var pathImages = new List<string>();
-            var uploadPath = Path.Combine(webHostEnvironment.WebRootPath, "images", userLogin, id.ToString());
-            // создаем папку для хранения файлов
-            Directory.CreateDirectory(uploadPath);
-
-            foreach (var file in files)
-            {
-                var type = "." + file.ContentType.Split("/")[1];
-                // путь к файлу
-                var pathForList = Path.Combine("images", userLogin, id.ToString(), RandomString(8) + type);
-                var fullPath = Path.Combine(webHostEnvironment.WebRootPath, pathForList);
-                pathImages.Add(pathForList);
-                // сохраняем файл
-                var fileStream = new FileStream(fullPath, FileMode.Create);
-                await file.CopyToAsync(fileStream);
-            }
-            return pathImages;
-        }
-
         [HttpDelete("/delete-image")]
         public IActionResult DeleteImage(string login, string id, string fileName)
         {
             var filePath = Path.Combine("wwwroot/images", login, id, fileName);
-            if (System.IO.File.Exists(filePath))
-            {
-                System.IO.File.Delete(filePath);
-                return Ok();
-            }
-            return BadRequest("Не удалось найти файл");
+            if (!System.IO.File.Exists(filePath)) return BadRequest("Не удалось найти файл");
+            System.IO.File.Delete(filePath);
+            return Ok();
         }
         
         [HttpGet("/get-saved-images")]
         public IActionResult GetSavedImages(string login, string id)
         {
-            var imageFiles = Directory.GetFiles(Path.Combine(webHostEnvironment.WebRootPath, "images", login, id))
+            var imageFiles = Directory.GetFiles(Path.Combine(_webRootPath, "images", login, id))
                 .Select(Path.GetFileName)
                 .ToList();
-
             var images = imageFiles.Select(fileName => new { fileName }).ToList();
             return Json(images);
         }
+    }
+    public class ItemGuidRequest
+    {
+        public Guid Id { get; init; }
     }
 }

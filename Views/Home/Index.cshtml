@@ -1,9 +1,9 @@
 ﻿@using System.Security.Claims
 @addTagHelper *, ItemHub
+@model ItemHub.Models.Pages.IndexViewModel
 @{
     ViewData["Title"] = "Home Page";
 }
-
 <div class="text-center mb-lg-4">
     @if (User.Identity!.IsAuthenticated)
     {
@@ -24,17 +24,29 @@
 {
 <div class="d-flex justify-content-center mb-3">
     <ul class="nav nav-tabs col-8">
-        <li class="nav-item">
-            <a class="nav-link active" href="#">Все товары</a>
-        </li>
-        <li class="nav-item">
-            <a asp-action="MyItems" class="nav-link">Мои товары</a>
-        </li>
+        @if (ViewContext.RouteData.Values["Action"]?.ToString() == "Index")
+        {
+            <li class="nav-item">
+                <a class="nav-link active">Все товары</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-action="MyItems">Мои товары</a>
+            </li>
+        }
+        else
+        {
+            <li class="nav-item">
+                <a class="nav-link" asp-action="Index">Все товары</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active">Мои товары</a>
+            </li>
+        }
     </ul>
 </div>
 }
 
-@foreach (var item in ViewBag.ViewPageItems.Items)
+@foreach (var item in Model.Items)
 {
     @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
     {
@@ -60,7 +72,7 @@
         </div>
     }
     <div class="card mb-3 col-md-8 m-auto">
-        <div class="row ">
+        <div class="row">
             <div class="col"> 
                 @if(item.PathImages.Count == 1)
                 {
@@ -127,7 +139,7 @@
                                 }
                                 else
                                 {
-                                    <small class="text-muted">Обновлено: @item.UpdatedDate.ToLocalTime()</small>
+                                    <small class="text-muted">Обновлено: @item.UpdatedDate?.ToLocalTime()</small>
                                 }
                             </p>
                         </a>
@@ -143,16 +155,22 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item link-danger" data-bs-toggle="modal" 
                                            data-bs-target="#exampleModal-@item.Id">Удалить</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Item" asp-action="PublishedItem">Скрыть</a></li>
+                                    <li>
+                                        @if (item.Published)
+                                        {   
+                                            <a type="button" class="dropdown-item published" data-id="@item.Id">Скрыть</a>
+                                        }
+                                        else
+                                        {
+                                            <a type="button" class="dropdown-item published" data-id="@item.Id">Опубликовать</a>
+                                        }
+                                    </li>
                                 </ul>
                             </div>
                         }
                         @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
                         {
-                            <form asp-action="FavoritedItems" asp-controller="Item" method="post" class="save-form">
-                                <input type="hidden" name="id" value="@item.Id" class="item-id"/>
-                                <a type="button" class="btn btn-outline-success btn-sm save-button" data-id="@item.Id">Сохранить</a>
-                            </form>
+                            <a type="button" class="btn btn-outline-success btn-sm save-button" data-id="@item.Id">Сохранить</a>
                         }
                     </div>
                 </div>
@@ -160,18 +178,21 @@
         </div>
     </div>
 }
-@if (ViewBag.ViewPageItems.Items.Count <= 0)
+@if (!Model.Items.Any())
 {
     <p class="text-center text-muted">Нет ни одного товара.</p>
 }
-@if (ViewBag.ViewPageItems.PageViewModel.TotalPages > 1)
+@if (Model.PageViewModel.TotalPages > 1)
 {
 <div class="justify-content-center d-flex">
-    <page-link page-model="ViewBag.ViewPageItems.PageViewModel" page-action="Index"></page-link>
+    <page-link page-model="Model.PageViewModel" page-action="@ViewContext.RouteData.Values["Action"]?.ToString()"></page-link>
 </div>
 }
-
 @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
 {
-    <script src="~/js/favorite-items.js" ></script>
+<script src="~/js/favorite-items.js" asp-append-version="true"></script>
+}
+@if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.SELLER)
+{
+    <script src="~/js/published-items.js" asp-append-version="true"></script>
 }

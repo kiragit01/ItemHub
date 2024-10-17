@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using System.Text;
-using ItemHub.DbConnection;
 using ItemHub.Models.Auth;
 using ItemHub.Repository;
 using ItemHub.Repository.Interfaces;

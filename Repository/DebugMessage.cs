@@ -4,6 +4,5 @@ public enum DebugMessage
 {
     ErrorLogin,
     ErrorEmail,
-    Error,
     Success
 }

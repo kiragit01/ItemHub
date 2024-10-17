@@ -3,15 +3,17 @@ using ItemHub.Models.OnlyItem;
 using ItemHub.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace ItemHub.DbConnection;
+namespace ItemHub.Repository;
 
 public class ItemDb(DataBaseContext db) : IItemDb
 {
     public IQueryable<Item> AllItems() => db.Items;
     
-    public Task<Item?> GetItemNoTracking(Guid id) => db.Items.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
+    public async Task<Item?> GetItemNoTracking(Guid id) => 
+        await db.Items.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
 
-    public Task<Item?> GetItem(Guid id) => db.Items.FirstOrDefaultAsync(o => o.Id == id);
+    public async Task<Item?> GetItem(Guid id) => 
+        await db.Items.FirstOrDefaultAsync(o => o.Id == id);
     public async Task AddItem(Item item)
     {
         await db.Items.AddAsync(item);
