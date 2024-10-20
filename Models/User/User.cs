@@ -1,36 +1,36 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using ItemHub.Models.OnlyItem;
+using Microsoft.EntityFrameworkCore;
 
 namespace ItemHub.Models.User
 {
-    public class User
+    public class User(string name, string login, string email, string hashedPassword, byte[] salt, string avatar)
     {
         [Key]
-        public Guid Id { get; init; }
-        public string Name { get; set; }
-        public string Login { get; set; }
-        public string Email { get; set; }
-        public string HashedPassword { get; set; }
-        public byte[] Salt { get; set; }
-        public string Avatar { get; set; }
+        public Guid Id { get; init; } = Guid.NewGuid();
+
+        public string Name { get; set; } = name;
+        public string Login { get; set; } = login;
+        public string Email { get; set; } = email;
+        public string HashedPassword { get; set; } = hashedPassword;
+        public byte[] Salt { get; set; } = salt;
+        public string Avatar { get; set; } = avatar;
         public string? Description { get; set; }
         public string? Phone { get; set; }
-        public DateTime DateTimeCreateAccount { get; set; }
-        
+        public DateTime DateTimeCreateAccount { get; set; } = DateTime.UtcNow;
+
         public List<string> Roles { get; set; } = [];
         public List<Item> CustomItems { get; set; } = []; /*Для Продавца*/
         public List<Guid> FavoritedItemsId { get; set; } = []; /*Для Покупателя*/
 
-        public User(string name, string login, string email, string hashedPassword, byte[] salt, string avatar)
+        public void UpdateDataUser(string name, string login, string email, string avatar, string? description, string? phone)
         {
-            Id = Guid.NewGuid();
             Name = name;
             Login = login;
             Email = email;
-            HashedPassword = hashedPassword;
-            Salt = salt;
             Avatar = avatar;
-            DateTimeCreateAccount = DateTime.UtcNow;
+            Description = description;
+            Phone = phone;
         }
 
         public void AddRoles(string[] roles) => Roles.AddRange(roles);

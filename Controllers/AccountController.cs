@@ -3,220 +3,77 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using ItemHub.Models.Auth;
-using ItemHub.Models.User;
-using ItemHub.Repository;
 using ItemHub.Repository.Interfaces;
+using ItemHub.Services;
 using Microsoft.AspNetCore.Authorization;
-using ItemHub.Utilities;
 
 namespace ItemHub.Controllers
 {
+    [Authorize] 
     public class AccountController(IUserDb dbU, IItemDb dbI, IWebHostEnvironment webHostEnvironment) : Controller
     {
         private readonly string _webRootPath = webHostEnvironment.WebRootPath;
         
-        [HttpGet]
-        [Route("register")]
-        public IActionResult Register() => View();
-
-        [HttpGet]
-        [Route("login")]
-        public IActionResult Login() => View();
-
-        [HttpPost]
-        [Route("register")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                ModelState.AddModelError("", "Что-то пошло не так");
-                return View();
-            }
-
-            var debug = await dbU.CheckUser(model.Email, model.Login);
-            switch (debug)
-            {
-                case DebugMessage.ErrorEmail:
-                    ModelState.AddModelError("", "Этот Email уже зарегистрирован");
-                    return View();
-                case DebugMessage.ErrorLogin:
-                    ModelState.AddModelError("", "Этот логин занят");
-                    return View();
-            }
-
-            var avatar = await UploadFiles.UploadAvatar(model.Avatar, model.Login, _webRootPath);
-            var salt = HashedPassword.GeneratedSalt;
-            var hashedPassword = HashedPassword.Hashed(model.Password, salt);
-            var user = new User(model.Name, model.Login, model.Email, hashedPassword, salt, avatar);
-
-            if (model.Seller) user.AddRoles([UserRoles.SELLER]);
-            else user.AddRoles([UserRoles.CUSTOMER]);
-
-            await dbU.AddUser(user);
-            await Authenticate(user); // аутентификация
-
-            return RedirectToAction("Index", "Home");
-        }
-
-        [HttpPost]
-        [Route("login")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginModel model)
-        {
-            if (!ModelState.IsValid) return View();
-            User? user = await dbU.SingIn(model.Login, model.Password);
-            if (user == null)
-            {
-                ModelState.AddModelError("", "Неверный логин и(или) пароль.");
-                return View();
-            }
-
-            await Authenticate(user); // аутентификация
-            return RedirectToAction("Index", "Home");
-        }
-
-
-        [HttpGet]
-        [Route("account")]
-        [Authorize]
+        [HttpGet] 
+        [Route("account")] 
         public async Task<IActionResult> Account()
         {
             var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             return View(user);
         }
-
-
+        
         [HttpGet]
-        [Route("account/edit")]
-        [Authorize]
+        [Route("account/edit")] 
         public async Task<IActionResult> EditAccount()
         {
             var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            if (user == null) return RedirectToAction("Login");
-            ViewBag.editUser = new EditAccountModel
-            {
-                Name = user.Name,
-                Login = user.Login,
-                Email = user.Email,
-                Description = user.Description,
-                Phone = user.Phone
-            };
-            return View();
+            if (user == null) return RedirectToAction("Login", "Auth");
+            var editUser = new EditAccountModel(user.Name, user.Login, user.Email, user.Description, user.Phone);
+            return View(editUser);
         }
 
-        [HttpPost]
-        [Route("account/edit")]
-        [Authorize]
+        [HttpPost] [Route("account/edit")] 
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditAccount(EditAccountModel model)
         {
-            if (!ModelState.IsValid) return View();
-            var check = await dbU.CheckUser(model.Email, model.Login);
-            if (check == DebugMessage.ErrorEmail && model.Email != User.FindFirst(ClaimTypes.Email)!.Value)
-            {
-                ModelState.AddModelError("", "Этот Email уже зарегистрирован");
-                return View();
-            }
-            if (check == DebugMessage.ErrorLogin &&
-                model.Login != User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
-            {
-                ModelState.AddModelError("", "Этот логин занят");
-                return View();
-            }
-            var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            if (user == null) return RedirectToAction("Index", "Home");
-
-            foreach (var item in user.CustomItems)
-            {
-                var itemDb = await dbI.GetItem(item.Id);
-                if (itemDb == null) continue;
-                itemDb.Creator = model.Login;
-                await dbI.UpdateItem(itemDb);
-            }
-
-            var avatar = model.Avatar == null 
-                ? user.Avatar 
-                : await UploadFiles.UploadAvatar(model.Avatar, model.Login, _webRootPath);
-            user.Name = model.Name;
-            user.Login = model.Login;
-            user.Email = model.Email;
-            user.Avatar = avatar;
-            user.Description = model.Description;
-            user.Phone = model.Phone;
-
-            await dbU.UpdateUser(user);
-            await Authenticate(user); // аутентификация
-
-            return RedirectToAction("Index", "Home");
-        }
-
-        private async Task Authenticate(User user)
-        {
-            // создаем claim
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Name, ClaimValueTypes.String),
-                new Claim(ClaimTypes.NameIdentifier, user.Login, ClaimValueTypes.String),
-                new Claim(ClaimTypes.Email, user.Email, ClaimValueTypes.Email)
-            };
-            claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
-            // создаем объект ClaimsIdentity
-            var id = new ClaimsIdentity(claims, "ApplicationCookie", 
-                ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
-            // установка аутентификационных куки
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
+            if (!ModelState.IsValid) return ModelError();
+            var error = await UserManagementService.EditAccount(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value,
+                User.FindFirst(ClaimTypes.Email)!.Value,
+                model, dbU, dbI, _webRootPath, HttpContext);
+            return error != null 
+                ? ModelError(error) 
+                : RedirectToAction("Index", "Home");
         }
         
         [HttpPost]
-        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteAccount()
         {
-            var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-
-            if (user == null) return BadRequest("Войдите в аккаунт для того чтобы его удалить.");
-            
-            foreach (var item in user.CustomItems)
-            {
-                var itemDb = await dbI.GetItem(item.Id);
-                if (itemDb != null) await dbI.RemoveItem(itemDb);
-            }
-
-            await dbU.DeleteUser(user);
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login", "Account");
+            var login = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+            return
+                await AuthenticationManagerService.DeleteAccount(
+                    login, dbU, dbI, HttpContext) == ResponseMessage.Error
+                ? BadRequest("Войдите в аккаунт для того чтобы его удалить.")
+                : RedirectToAction("Login", "Auth");
         }
 
         [HttpPost]
-        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdatePassword(UpdatePasswordModel model)
         {
-            if (!ModelState.IsValid) return BadRequest();
-            var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            if (user == null) return RedirectToAction("Login");
-            var hashedPassword = HashedPassword.Hashed(model.OldPassword, user.Salt);
-            if (hashedPassword != user.HashedPassword)
-            {
-                ModelState.AddModelError("", "Старый пароль неверный.");
-                return BadRequest();
-            }
-
-            user.Salt = HashedPassword.GeneratedSalt;
-            user.HashedPassword = HashedPassword.Hashed(model.NewPassword, user.Salt);
-            
-            await dbU.UpdateUser(user);
-            return RedirectToAction("Account", "Account");  
+            if (!ModelState.IsValid) return ModelError();
+            var login = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+            var error = await UserManagementService.UpdatePassword(login, model, dbU);
+            return error != null 
+                ? ModelError(error) 
+                : RedirectToAction("Account", "Account");
         }
         
-        
-        public async Task<IActionResult> Logout()
+        private IActionResult ModelError(string error = "Данные заполнены неверно.")
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login", "Account");
+            ModelState.AddModelError("", error);
+            return View();
         }
-        
-        public IActionResult AccessDenied() => RedirectToAction("Index", "Home");
     }
 }

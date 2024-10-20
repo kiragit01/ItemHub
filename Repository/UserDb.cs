@@ -1,6 +1,7 @@
 using ItemHub.Data;
 using ItemHub.Models.User;
 using ItemHub.Repository.Interfaces;
+using ItemHub.Services;
 using ItemHub.Utilities;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -13,22 +14,22 @@ public class UserDb(DataBaseContext db) : IUserDb
         .Include(user => user.CustomItems)
         .FirstOrDefaultAsync(u => u.Login == login);
 
-    public async Task<DebugMessage> CheckUser(string? email, string? login)
+    public async Task<ResponseMessage> CheckUser(string? email, string? login)
     {
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (user != null)
         {
-            return DebugMessage.ErrorEmail;
+            return ResponseMessage.ErrorEmail;
         }
         user = await db.Users.FirstOrDefaultAsync(u => u.Login == login);
         if (user != null)
         {
-            return DebugMessage.ErrorLogin;
+            return ResponseMessage.ErrorLogin;
         }
-        return DebugMessage.Success;
+        return ResponseMessage.Ok;
     }
 
-    public async Task<User?> SingIn(string login, string password)
+    public async Task<User?> LogIn(string login, string password)
     {
         var user = await db.Users.FirstOrDefaultAsync(u => u.Login == login);
         if (user == null) return null;

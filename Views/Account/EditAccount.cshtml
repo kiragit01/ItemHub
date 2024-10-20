@@ -1,34 +1,26 @@
-@using System.Security.Claims
 @model EditAccountModel
-
 @{
     ViewData["Title"] = "Edit Account";
-    var user = new EditAccountModel()
-    {
-    Login = "",
-    Email = "",
-    Name = ""
-    };
-    if (ViewBag.editUser != null)
-    {
-        user = ViewBag.editUser;
-    }
 }
 <style>textarea{
         min-height: 150px!important;
         max-height: 250px;}</style>
 <div class="container col-xl-7 mt-5">
     <h1>Account</h1>
-    <form class="row g-3 needs-validation" asp-anti-forgery="true" method="post" enctype="multipart/form-data" novalidate>
+    <form class="row g-3 needs-validation" asp-anti-forgery="true"
+          method="post" asp-controller="Account" asp-action="EditAccount" 
+          enctype="multipart/form-data" novalidate>
         <div class="validation" asp-validation-summary="ModelOnly"></div>
         <div class="col-12">
             <label for="inputAvatar" class="form-label">Avatar</label>
-            <input type="file" asp-for="Avatar" class="form-control" accept="image/png, image/jpeg, image/jpg" id="inputAvatar">
+            <input type="file" asp-for="Avatar" class="form-control" 
+                   accept="image/png, image/jpeg, image/jpg" id="inputAvatar">
             @Html.ValidationMessageFor(x => x.Avatar)
         </div>
         <div class="col-12">
             <label for="inputName" class="form-label">Name</label>
-            <input type="text" asp-for="Name" class="form-control" id="inputName" value="@user.Name" placeholder="Steve" required>
+            <input type="text" asp-for="Name" class="form-control" id="inputName" 
+                   value="@Model.Name" placeholder="Steve" required>
             <div class="invalid-feedback">
                 Введите имя.
             </div>
@@ -38,7 +30,8 @@
             <label for="inputLogin" class="form-label">Login</label>
             <div class="input-group has-validation">
                 <div class="input-group-text">@@</div>
-                <input type="text" asp-for="Login" class="form-control" id="inputLogin" value="@user.Login" placeholder="Username" required>
+                <input type="text" asp-for="Login" class="form-control" id="inputLogin" 
+                       value="@Model.Login" placeholder="Username" required>
                 <div class="invalid-feedback">
                     Введите логин.
                 </div>
@@ -47,7 +40,8 @@
         </div>
         <div class="col-12">
             <label for="inputEmail" class="form-label">Email</label>
-            <input type="email" asp-for="Email" class="form-control" id="inputEmail" value="@user.Email" placeholder="name@example.com" required>
+            <input type="email" asp-for="Email" class="form-control" id="inputEmail" 
+                   value="@Model.Email" placeholder="name@example.com" required>
             <div class="invalid-feedback">
                 Введите email.
             </div>
@@ -55,18 +49,22 @@
         </div>
         <div class="col-12">
             <label for="inputDescription" class="form-label">Description</label>
-            <textarea name="Description" rows="4" class="form-control" id="inputDescription" placeholder="О себе">@user.Description</textarea>
+            <textarea name="Description" rows="4" class="form-control" id="inputDescription" 
+                placeholder="О себе">@Model.Description</textarea>
             @Html.ValidationMessageFor(x => x.Description)
         </div>
         <div class="col-12">
             <label for="inputPhone" class="form-label">Phone</label>
-            <input type="tel" asp-for="Phone" class="form-control" id="inputPhone" value="@user.Phone" placeholder="+X (XXX) XXX-XX-XX"
-                   pattern="[\+\]\d{1}\s[\(\]\d{3}[\)\]\s\d{3}[\-\]\d{2}[\-\]\d{0-2}" minlength="9" maxlength="18">
+            <input type="tel" asp-for="Phone" class="form-control" id="inputPhone"
+                   value="@Model.Phone" placeholder="+X (XXX) XXX-XX-XX"
+                   pattern="[\+\]\d{1}\s[\(\]\d{3}[\)\]\s\d{3}[\-\]\d{2}[\-\]\d{0-2}" 
+                   minlength="9" maxlength="18">
             @Html.ValidationMessageFor(x => x.Phone)
         </div>
 
         <div class="col-6">
-            <a type="button" class="btn btn-secondary mt-3" data-bs-toggle="modal" data-bs-target="#exampleModal">Изменить пароль</a>
+            <a type="button" class="btn btn-secondary mt-3" data-bs-toggle="modal"
+               data-bs-target="#exampleModal">Изменить пароль</a>
         </div>
         <div class="col-6 d-flex justify-content-end">
             <button type="submit" class="btn btn-primary mt-3">Сохранить</button>
@@ -79,13 +77,16 @@
                     <h1 class="modal-title fs-5" id="exampleModalLabel">Обновить пароль</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form class="needs-validation" asp-controller="Account" asp-action="UpdatePassword" asp-anti-forgery="true" method="post" novalidate>
+                <form class="needs-validation" asp-controller="Account" asp-action="UpdatePassword" 
+                      asp-anti-forgery="true" method="post" novalidate>
                     <div class="modal-body">
                         <div class="col">
                             <label for="old-password-input" class="form-label">Старый пароль:</label>
                             <div class="position-relative has-validation">
-                                <input type="password" name="oldPassword" class="form-control" id="old-password-input" required>
-                                <a class="password-control" style="top: 10px;" onclick="return toggle_password_visibility(this, 'old    -password-input');"></a>
+                                <input type="password" name="oldPassword" 
+                                       class="form-control" id="old-password-input" required>
+                                <a class="password-control" style="top: 10px;" 
+                                   onclick="return toggle_password_visibility(this, 'old-password-input');"></a>
                                 <div class="invalid-feedback">
                                     Введите существующий пароль.
                                 </div>
