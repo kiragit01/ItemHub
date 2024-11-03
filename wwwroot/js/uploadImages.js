@@ -10,11 +10,21 @@ let queuedImagesArray = [],  // Новые изображения
 
 // Загрузка сохранённых изображений при загрузке страницы
 document.addEventListener("DOMContentLoaded", () => {
-    fetch("/get-saved-images?login=" + userLogin.textContent + `&id=${itemId.value}`)  // Запрос на получение уже загруженных изображений
-        .then(response => response.json())
+    fetch(`/api/items/${itemId.value}/images`)  // Запрос на получение уже загруженных изображений
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Ошибка при загрузке изображений");
+            }
+            return response.json();
+        })
         .then(data => {
-            savedImagesArray = data;
+            savedImagesArray = data;  // Данные - массив строк с именами файлов
             displayImages();   // Отображаем уже загруженные изображения
+        })
+        .catch(error => {
+            console.error(error);
+            serverMessage.innerHTML = error.message;
+            serverMessage.style.cssText = "background-color: #f8d7da; color: #b71c1c";
         });
 });
 
@@ -22,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 input.addEventListener("change", () => {
     const files = input.files;
     for (let i = 0; i < files.length; i++) {
+        if (!files[i].type.match("image")) continue;
         queuedImagesArray.push(files[i]);
     }
     input.value = "";  // Очистка input после добавления файлов
@@ -29,17 +40,23 @@ input.addEventListener("change", () => {
 });
 
 // Обработка drag and drop для input
-input.addEventListener("dragenter", function () {
+inputDiv.addEventListener("dragenter", function (e) {
+    e.preventDefault();
     inputDiv.classList.add("_active");
 });
 
-input.addEventListener("dragleave", function () {
+inputDiv.addEventListener("dragleave", function (e) {
+    e.preventDefault();
     inputDiv.classList.remove("_active");
 });
 
-inputDiv.addEventListener("drop", (e) => {
-    inputDiv.classList.remove("_active");
+inputDiv.addEventListener("dragover", function (e) {
     e.preventDefault();
+});
+
+inputDiv.addEventListener("drop", (e) => {
+    e.preventDefault();
+    inputDiv.classList.remove("_active");
     const files = e.dataTransfer.files;
     for (let i = 0; i < files.length; i++) {
         if (!files[i].type.match("image")) continue;
@@ -54,9 +71,9 @@ function displayImages() {
     let images = "";
 
     // Отображаем сохраненные изображения
-    savedImagesArray.forEach((image, index) => {
+    savedImagesArray.forEach((fileName, index) => {
         images += `<div class="image">
-                        <img src="/images/${userLogin.textContent}/${itemId.value}/${image.fileName}" alt="saved image"> 
+                        <img src="/images/${userLogin.textContent}/${itemId.value}/${fileName}" alt="saved image"> 
                         <span onclick="deleteSavedImage(${index})">&times;</span>
                    </div>`;
     });
@@ -80,15 +97,21 @@ function deleteQueuedImage(index) {
 
 // Удаление сохраненного изображения
 function deleteSavedImage(index) {
-    const imageName = savedImagesArray[index].fileName;
+    const imageName = savedImagesArray[index];
 
-    fetch(`/delete-image?login=${userLogin.textContent}&id=${itemId.value}&fileName=${imageName}`, {
+    fetch(`/api/items/${itemId.value}/images/${encodeURIComponent(imageName)}`, {
         method: 'DELETE'
     }).then(response => {
         if (response.ok) {
             savedImagesArray.splice(index, 1);  // Удаляем из списка
             displayImages();  // Обновляем отображение
+        } else {
+            throw new Error("Ошибка при удалении изображения");
         }
+    }).catch(error => {
+        console.error(error);
+        serverMessage.innerHTML = error.message;
+        serverMessage.style.cssText = "background-color: #f8d7da; color: #b71c1c";
     });
 }
 
@@ -99,18 +122,18 @@ submitForm.addEventListener("submit", (e) => {
     const formData = new FormData(submitForm);
 
     // Добавляем изображения в FormData
-    savedImagesArray.forEach((image, index) => {
-        formData.append(`savedImages[]`, `/images/${userLogin.textContent}/${itemId.value}/${image.fileName}`);  // Передаем только имя файла
+    savedImagesArray.forEach((fileName, index) => {
+        formData.append(`savedImages[]`, `/images/${userLogin.textContent}/${itemId.value}/${fileName}`);  // Передаем только имя файла
     });
 
     // Добавляем новые изображения в FormData
     queuedImagesArray.forEach((image, index) => {
-        formData.append(`Images`, image);  // Передаем сам файл
+        formData.append("Images", image);  // Передаем сам файл
     });
 
     // Отправка данных через fetch
-    fetch("/edit", {
-        method: "POST",
+    fetch(`/update`, {
+        method: "PUT",
         body: formData
     })
         .then(response => {
@@ -125,7 +148,8 @@ submitForm.addEventListener("submit", (e) => {
             location.replace(`/item?id=${itemId.value}`);
         })
         .catch(error => {
-            serverMessage.innerHTML = error;
+            console.error(error);
+            serverMessage.innerHTML = error.message;
             serverMessage.style.cssText = "background-color: #f8d7da; color: #b71c1c";
         });
 });

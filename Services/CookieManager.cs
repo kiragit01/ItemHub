@@ -1,13 +1,15 @@
 using System.Security.Claims;
 using ItemHub.Models.User;
+using ItemHub.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace ItemHub.Services;
 
-public class CookieManager
+public class CookieManager(IHttpContextAccessor httpContextAccessor) : IMyCookieManager
 {
-    public static async Task Authentication(User user, HttpContext httpContext)
+    private readonly HttpContext _httpContext = httpContextAccessor.HttpContext!;
+    public async Task Authentication(User user)
     {
         // создаем claim
         var claims = new List<Claim>
@@ -21,6 +23,9 @@ public class CookieManager
         var id = new ClaimsIdentity(claims, "ApplicationCookie", 
             ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
         // установка аутентификационных куки
-        await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
+        await _httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
     }
+
+    public async Task SignOutAsync() 
+        => await _httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 }

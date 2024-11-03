@@ -188,10 +188,6 @@
     <page-link page-model="Model.PageViewModel" page-action="@ViewContext.RouteData.Values["Action"]?.ToString()"></page-link>
 </div>
 }
-@if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
-{
-<script src="~/js/favorite-items.js" asp-append-version="true"></script>
-}
 @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.SELLER)
 {
     <script src="~/js/published-items.js" asp-append-version="true"></script>

@@ -6,8 +6,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const id = button.dataset.id;
 
             try {
-                const response = await fetch('/PublishedItem', {
-                    method: "POST",
+                const response = await fetch(`/api/items/${id}/publish`, {
+                    method: "PUT",
                     headers: {
                         'Content-Type': 'application/json'
                     },

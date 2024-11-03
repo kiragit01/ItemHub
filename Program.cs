@@ -1,21 +1,21 @@
 using ItemHub.Data;
-using ItemHub.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System.Security.Claims;
-using System.Text;
-using ItemHub.Models.Auth;
+using ItemHub.Interfaces;
 using ItemHub.Repository;
 using ItemHub.Repository.Interfaces;
+using ItemHub.Services;
+using ItemHub.Utilities;
+using ICookieManager = Microsoft.AspNetCore.Authentication.Cookies.ICookieManager;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddAuthorization();
-builder.Services.AddDbContext<DataBaseContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<DataBaseContext>(options => 
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
@@ -24,14 +24,22 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
                     options.Cookie.Name = "authCookie";
                 });
 
-builder.Services.AddScoped<IItemDb, ItemDb>();
-builder.Services.AddScoped<IUserDb, UserDb>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserAccountService, UserAccountService>();
+builder.Services.AddScoped<IMyCookieManager, CookieManager>(); 
+builder.Services.AddScoped<IItemRepository, ItemRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IItemApiService, ItemApiService>();
+builder.Services.AddScoped<IUserApiService, UserApiService>();
+builder.Services.AddScoped<IUserContext, UserContext>(); 
+builder.Services.AddScoped<IAuthService, AuthService>(); 
+builder.Services.AddScoped<IItemService, ItemService>(); 
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -41,6 +49,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+WebRootPath.Path = app.Environment.WebRootPath;
 
 app.UseRouting();
 

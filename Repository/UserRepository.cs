@@ -1,20 +1,24 @@
 using ItemHub.Data;
+using ItemHub.Interfaces;
 using ItemHub.Models.User;
 using ItemHub.Repository.Interfaces;
 using ItemHub.Services;
 using ItemHub.Utilities;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace ItemHub.Repository;
 
-public class UserDb(DataBaseContext db) : IUserDb
+public class UserRepository(DataBaseContext db, IUserContext userContext) : IUserRepository
 {
-    public Task<User?> GetUser(string? login) => db.Users
-        .Include(user => user.CustomItems)
-        .FirstOrDefaultAsync(u => u.Login == login);
+    public Task<User?> GetUserAsync(string? login = null)
+    {
+        var contextLogin = login ?? userContext.Login;
+        return db.Users
+            .Include(user => user.CustomItems)
+            .FirstOrDefaultAsync(u => u.Login == contextLogin);
+    }
 
-    public async Task<ResponseMessage> CheckUser(string? email, string? login)
+    public async Task<ResponseMessage> CheckUserAsync(string? email, string? login)
     {
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (user != null)
@@ -22,35 +26,35 @@ public class UserDb(DataBaseContext db) : IUserDb
             return ResponseMessage.ErrorEmail;
         }
         user = await db.Users.FirstOrDefaultAsync(u => u.Login == login);
-        if (user != null)
-        {
-            return ResponseMessage.ErrorLogin;
-        }
-        return ResponseMessage.Ok;
+        return user != null 
+            ? ResponseMessage.ErrorLogin 
+            : ResponseMessage.Ok;
     }
 
-    public async Task<User?> LogIn(string login, string password)
+    public async Task<User?> LogInAsync(string login, string password)
     {
         var user = await db.Users.FirstOrDefaultAsync(u => u.Login == login);
         if (user == null) return null;
         var checkPassword = HashedPassword.Hashed(password, user.Salt);
-        return user.HashedPassword == checkPassword ? user : null;
+        return user.HashedPassword == checkPassword 
+            ? user 
+            : null;
     }
 
-    public async Task AddUser(User user)
+    public async Task AddUserAsync(User user)
     {
         await db.Users.AddAsync(user);
         await db.SaveChangesAsync();
     }
 
-    public async Task UpdateUser(User user)
+    public async Task UpdateUserAsync(User user)
     {
         db.Users.Update(user);
         await db.SaveChangesAsync();
     }
 
 
-    public async Task DeleteUser(User user)
+    public async Task DeleteUserAsync(User user)
     {
         db.Users.Remove(user);
         await db.SaveChangesAsync();

@@ -4,23 +4,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Функция для обновления количества сохранённых товаров с сервера
     function updateFavoriteCount() {
-        fetch('/favcount', {
-            method: 'POST',
+        fetch('/api/items/favorites/count', {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
         })
             .then(response => response.json())
-            .then(count => {
-                favoriteCountElement.textContent = count;
+            .then(data => {
+                favoriteCountElement.textContent = data.count;
             })
             .catch(error => console.error('Ошибка при получении количества сохранённых товаров:', error));
     }
 
     // Функция для обновления состояния кнопок сохранения
     function updateSaveButtons() {
-        fetch('/GetFavoritedItems', {
-            method: 'POST',
+        fetch('/api/items/favorites', {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const itemId = button.getAttribute('data-id');
 
         button.addEventListener('click', function () {
-            fetch('/FavoritedItems', {
+            fetch(`/api/items/${itemId}/favorite`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -1,17 +1,16 @@
 @model Item
 @{
-    ViewBag.Title = "Edit Item";
-    var item = ViewBag.Item;
+    ViewData["Title"] = "Edit Item";
 }
 <link rel="stylesheet" href="~/css/ItemEdit.css">
 <form method="post" class="submit-all container" asp-action="Edit" id="submit1">
-    <input class="visually-hidden" value="@item.Id" name="id" id="itemid"/>
-    <div class="visually-hidden user-login">@item.Creator</div>
-    <button type="submit" class="btn btn-success submit-all-btn col-5">Обновить карточкку товара</button>
+    <input class="visually-hidden" value="@Model.Id" name="id" id="itemid"/>
+    <div class="visually-hidden user-login">@Model.Creator</div>
+    <button type="submit" class="btn btn-success submit-all-btn col-5">Обновить карточку товара</button>
 </form>
 <div class="mt-5">
     <div class="input-container">
-        <input type="text" name="Title" value="@item.Title" id="input" maxlength="75" form="submit1" required>
+        <input type="text" name="Title" value="@Model.Title" id="input" maxlength="75" form="submit1" required>
         <label for="input" class="label">Title</label>
         <div class="underline"></div>
     </div>
@@ -40,7 +39,7 @@
         <ul class="list-group h-100">
             <li class="h3 list-group-item mb-0">Описание: </li>
             <li class="list-group-item h-100 pe-4">
-                <p><textarea type="text" name="Description" class="form-control resize-none" rows="13" form="submit1">@item.Description</textarea></p>
+                <p><textarea type="text" name="Description" class="form-control resize-none" rows="13" form="submit1">@Model.Description</textarea></p>
             </li>
         </ul>
     </div>
@@ -49,7 +48,7 @@
 <div class="input-group has-validation w-price float-end mt-2 mb-5">
     <div class="input-group-text btn btn-success" for="validationCustomPrice">Price:</div>
     <span class="border-bottom-price"></span>
-    <input type="number" value="@item.Price" form="submit1" name="Price" oninput="maxLengthCheck(this); 
+    <input type="number" value="@Model.Price" form="submit1" name="Price" oninput="maxLengthCheck(this); 
            this.value=this.value.slice(0,this.maxLength||1/1);this.value=(this.value   < 0) ? (1/1) : this.value;" maxlength="7"
            class="form-control btn btn-success active" id="validationCustomPrice" min="0" placeholder="999" required>
     <div class="input-group-text btn btn-success">$</div>

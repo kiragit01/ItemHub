@@ -5,28 +5,32 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ItemHub.Repository;
 
-public class ItemDb(DataBaseContext db) : IItemDb
+public class ItemRepository(DataBaseContext db) : IItemRepository
 {
     public IQueryable<Item> AllItems() => db.Items;
     
-    public async Task<Item?> GetItemNoTracking(Guid id) => 
+    public async Task<Item?> GetItemNoTrackingAsync(Guid id) => 
         await db.Items.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
 
-    public async Task<Item?> GetItem(Guid id) => 
+    public async Task<Item?> GetItemAsync(Guid id) => 
         await db.Items.FirstOrDefaultAsync(o => o.Id == id);
-    public async Task AddItem(Item item)
+    
+    public async Task<bool> ItemExistsAsync(Guid id) => 
+        await db.Items.FirstOrDefaultAsync(o => o.Id == id) != null;
+    
+    public async Task AddItemAsync(Item item)
     {
         await db.Items.AddAsync(item);
         await db.SaveChangesAsync();
     }
 
-    public async Task UpdateItem(Item item)
+    public async Task UpdateItemAsync(Item item)
     {
         db.Items.Update(item);
         await db.SaveChangesAsync();
     }
 
-    public async Task RemoveItem(Item item)
+    public async Task RemoveItemAsync(Item item)
     {
         db.Items.Remove(item);
         await db.SaveChangesAsync();

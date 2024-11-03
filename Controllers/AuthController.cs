@@ -1,16 +1,12 @@
+using ItemHub.Interfaces;
 using ItemHub.Models.Auth;
-using ItemHub.Repository.Interfaces;
-using ItemHub.Services;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using ItemHub.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ItemHub.Controllers;
 
-public class AuthController(IUserDb dbU, IWebHostEnvironment webHostEnvironment) : Controller
+public class AuthController(IAuthService authService) : Controller
 {
-    private readonly string _webRootPath = webHostEnvironment.WebRootPath;
-        
     [HttpGet] [Route("register")]
     public IActionResult Register() => View();
 
@@ -22,7 +18,7 @@ public class AuthController(IUserDb dbU, IWebHostEnvironment webHostEnvironment)
     public async Task<IActionResult> Register(RegisterModel model)
     {
         if (!ModelState.IsValid) return ModelError();
-        var error = await AuthenticationManagerService.Register(model, dbU, _webRootPath, HttpContext);
+        var error = await authService.Register(model);
         return error != null 
             ? ModelError(error) 
             : RedirectToAction("Index", "Home");
@@ -33,7 +29,7 @@ public class AuthController(IUserDb dbU, IWebHostEnvironment webHostEnvironment)
     public async Task<IActionResult> Login(LoginModel model)
     {
         if (!ModelState.IsValid) return ModelError();
-        return await AuthenticationManagerService.Login(model, dbU, HttpContext) == ResponseMessage.Error 
+        return await authService.Login(model) == ResponseMessage.Error 
             ? ModelError("Неверный логин и(или) пароль.") 
             : RedirectToAction("Index", "Home");
     }
@@ -41,7 +37,7 @@ public class AuthController(IUserDb dbU, IWebHostEnvironment webHostEnvironment)
     
     public async Task<IActionResult> Logout()
     {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await authService.Logout();
         return RedirectToAction("Login", "Auth");
     }
     

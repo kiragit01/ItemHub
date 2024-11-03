@@ -1,4 +1,4 @@
-namespace ItemHub.Services;
+namespace ItemHub.Utilities;
 
 public enum ResponseMessage
 {

@@ -1,8 +1,9 @@
+
 namespace ItemHub.Utilities;
 
 public static class UploadFiles
 {
-    public static async Task<string> UploadAvatar(IFormFile? file, string userLogin, string webRootPath)
+    public static async Task<string> UploadAvatar(IFormFile? file, string userLogin)
     {
         if (file == null)
         {
@@ -13,14 +14,14 @@ public static class UploadFiles
         var folderPath = Path.Combine("images", userLogin);
 
         // Создаем папку для хранения файлов
-        var uploadPath = Path.Combine(webRootPath, folderPath);
+        var uploadPath = Path.Combine(WebRootPath.Path, folderPath);
         Directory.CreateDirectory(uploadPath);
 
         var type = Path.GetExtension(file.FileName).ToLower();
         var fileName = "Avatar" + type;
 
         var pathForList = Path.Combine(folderPath, fileName);
-        var fullPath = Path.Combine(webRootPath, pathForList);
+        var fullPath = Path.Combine(WebRootPath.Path, pathForList);
 
         // Сохраняем файл
         await using var fileStream = new FileStream(fullPath, FileMode.Create);
@@ -29,7 +30,7 @@ public static class UploadFiles
         return pathForList;
     }
 
-    public static async Task<List<string>> UploadItemImages(IFormFileCollection? files, string userLogin, string webRootPath, Guid id)
+    public static async Task<List<string>> UploadItemImages(IFormFileCollection? files, string userLogin, Guid id)
     {
         if (files == null || files.Count == 0)
         {
@@ -40,7 +41,7 @@ public static class UploadFiles
         var folderPath = Path.Combine("images", userLogin, id.ToString());
 
         // Создаем папку для хранения файлов
-        var uploadPath = Path.Combine(webRootPath, folderPath);
+        var uploadPath = Path.Combine(WebRootPath.Path, folderPath);
         Directory.CreateDirectory(uploadPath);
 
         var uploadedPaths = new List<string>();
@@ -50,7 +51,7 @@ public static class UploadFiles
             var fileName = $"{Guid.NewGuid()}{type}";
 
             var pathForList = Path.Combine(folderPath, fileName);
-            var fullPath = Path.Combine(webRootPath, pathForList);
+            var fullPath = Path.Combine(WebRootPath.Path, pathForList);
             uploadedPaths.Add(pathForList);
 
             // Сохраняем файл

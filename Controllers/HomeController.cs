@@ -15,13 +15,13 @@ using Microsoft.AspNetCore.Authorization;
 namespace ItemHub.Controllers
 {
 
-    public class HomeController(IUserDb dbU, IItemDb dbI) : Controller
+    public class HomeController(IUserRepository userRepository, IItemRepository itemRepository) : Controller
     {
         private const int PageSize = 2; // количество элементов на странице
 
         public async Task<IActionResult> Index(int page = 1)
         {
-            var source = dbI.AllItems();
+            var source = itemRepository.AllItems();
             var count = await source.CountAsync();
             var items = await source.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync();
  
@@ -34,7 +34,7 @@ namespace ItemHub.Controllers
         [Authorize(Roles = UserRoles.SELLER)]
         public async Task<IActionResult> MyItems(int page = 1)
         {
-            var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await userRepository.GetUserAsync(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             if (user == null) return BadRequest("Войдите в аккаунт.");
 
             var userItems = user.CustomItems;
@@ -49,7 +49,7 @@ namespace ItemHub.Controllers
         [Authorize(Roles = UserRoles.CUSTOMER)]
         public async Task<IActionResult> FavoritedItems(int page = 1)
         {
-            var user = await dbU.GetUser(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await userRepository.GetUserAsync(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             if (user == null) return BadRequest("Войдите в аккаунт.");
 
             var favoritedItems = new List<Item>();
@@ -57,14 +57,14 @@ namespace ItemHub.Controllers
 
             foreach (var id in user.FavoritedItemsId)
             {
-                var item = await dbI.GetItemNoTracking(id);
+                var item = await itemRepository.GetItemNoTrackingAsync(id);
                 if (item == null) continue;
                 favoritedItems.Add(item);
                 validItemIds.Add(id);
             }
 
             user.FavoritedItemsId = validItemIds;
-            await dbU.UpdateUser(user);
+            await userRepository.UpdateUserAsync(user);
 
             var items = favoritedItems.Skip((page - 1) * PageSize).Take(PageSize).ToList();
             
