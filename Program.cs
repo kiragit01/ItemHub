@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using ItemHub.Interfaces;
 using ItemHub.Repository;
-using ItemHub.Repository.Interfaces;
 using ItemHub.Services;
 using ItemHub.Utilities;
 using ICookieManager = Microsoft.AspNetCore.Authentication.Cookies.ICookieManager;
@@ -26,6 +25,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserAccountService, UserAccountService>();
+builder.Services.AddScoped<IPageManagerService, PageManagerService>();
 builder.Services.AddScoped<IMyCookieManager, CookieManager>(); 
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();

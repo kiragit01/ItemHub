@@ -1,7 +1,6 @@
 using ItemHub.Data;
 using ItemHub.Interfaces;
 using ItemHub.Models.User;
-using ItemHub.Repository.Interfaces;
 using ItemHub.Services;
 using ItemHub.Utilities;
 using Microsoft.EntityFrameworkCore;

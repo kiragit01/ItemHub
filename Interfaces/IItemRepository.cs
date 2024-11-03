@@ -1,6 +1,6 @@
 using ItemHub.Models.OnlyItem;
 
-namespace ItemHub.Repository.Interfaces;
+namespace ItemHub.Interfaces;
 
 public interface IItemRepository
 {

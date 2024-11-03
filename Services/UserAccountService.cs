@@ -1,7 +1,6 @@
 using ItemHub.Interfaces;
 using ItemHub.Models.Auth;
 using ItemHub.Models.User;
-using ItemHub.Repository.Interfaces;
 using ItemHub.Utilities;
 namespace ItemHub.Services;
 
@@ -26,14 +25,17 @@ public class UserAccountService(
 
         var user = await userRepository.GetUserAsync();
         if (user == null) return "Пользователь не найден";
-
-        foreach (var item in user.CustomItems)
+        if (user.Login != model.Login)
         {
-            var itemDb = await itemRepository.GetItemAsync(item.Id);
-            if (itemDb == null) continue;
-            itemDb.Creator = model.Login;
-            await itemRepository.UpdateItemAsync(itemDb);
+            foreach (var item in user.CustomItems)
+            {
+                var itemDb = await itemRepository.GetItemAsync(item.Id);
+                if (itemDb == null) continue;
+                itemDb.Creator = model.Login;
+                await itemRepository.UpdateItemAsync(itemDb);
+            }
         }
+            
 
         var avatar = model.Avatar == null 
             ? user.Avatar 

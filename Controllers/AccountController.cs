@@ -2,7 +2,6 @@
 using System.Security.Claims;
 using ItemHub.Interfaces;
 using ItemHub.Models.Auth;
-using ItemHub.Repository.Interfaces;
 using ItemHub.Services;
 using ItemHub.Utilities;
 using Microsoft.AspNetCore.Authorization;

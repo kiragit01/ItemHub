@@ -1,7 +1,6 @@
 using ItemHub.Interfaces;
 using ItemHub.Models.Auth;
 using ItemHub.Models.User;
-using ItemHub.Repository.Interfaces;
 using ItemHub.Utilities;
 
 namespace ItemHub.Services;

@@ -1,6 +1,5 @@
 using ItemHub.Interfaces;
 using ItemHub.Models.OnlyItem;
-using ItemHub.Repository.Interfaces;
 using ItemHub.Utilities;
 using Microsoft.EntityFrameworkCore;
 

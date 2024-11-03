@@ -1,8 +1,7 @@
 using ItemHub.Models.User;
-using ItemHub.Services;
 using ItemHub.Utilities;
 
-namespace ItemHub.Repository.Interfaces;
+namespace ItemHub.Interfaces;
 
 public interface IUserRepository
 {

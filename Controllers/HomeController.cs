@@ -1,87 +1,41 @@
-using ItemHub.Data;
 using ItemHub.Models;
-using ItemHub.Models.OnlyItem;
 using ItemHub.Models.User;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
-using System.Security.Claims;
-using ItemHub.Models.Pages;
-using ItemHub.Repository.Interfaces;
+using ItemHub.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 
-namespace ItemHub.Controllers
+namespace ItemHub.Controllers;
+
+public class HomeController(IPageManagerService pageManagerService) : Controller
 {
-
-    public class HomeController(IUserRepository userRepository, IItemRepository itemRepository) : Controller
+    public async Task<IActionResult> Index(int? page)
     {
-        private const int PageSize = 2; // количество элементов на странице
-
-        public async Task<IActionResult> Index(int page = 1)
-        {
-            var source = itemRepository.AllItems();
-            var count = await source.CountAsync();
-            var items = await source.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync();
- 
-            var pageViewModel = new PageViewModel(count, page, PageSize);
-            var viewModel = new IndexViewModel(items, pageViewModel);
-            return View(viewModel);
-        }
+        var viewModel = await pageManagerService.Index(page);
+        return View(viewModel);
+    }
         
-        [Route("my")]
-        [Authorize(Roles = UserRoles.SELLER)]
-        public async Task<IActionResult> MyItems(int page = 1)
-        {
-            var user = await userRepository.GetUserAsync(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            if (user == null) return BadRequest("Войдите в аккаунт.");
-
-            var userItems = user.CustomItems;
-            var items = userItems.Skip((page - 1) * PageSize).Take(PageSize).ToList();
-            
-            var pageViewModel = new PageViewModel(userItems.Count, page, PageSize);
-            var viewModel = new IndexViewModel(items, pageViewModel);
-            return View(viewModel);
-        }
+    [Route("my")]
+    [Authorize(Roles = UserRoles.SELLER)]
+    public async Task<IActionResult> MyItems(int? page)
+    {
+        var viewModel = await pageManagerService.MyItems(page);
+        return View(viewModel);
+    }
         
-        [Route("favorite")]
-        [Authorize(Roles = UserRoles.CUSTOMER)]
-        public async Task<IActionResult> FavoritedItems(int page = 1)
-        {
-            var user = await userRepository.GetUserAsync(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            if (user == null) return BadRequest("Войдите в аккаунт.");
+    [Route("favorite")]
+    [Authorize(Roles = UserRoles.CUSTOMER)]
+    public async Task<IActionResult> FavoritedItems(int? page)
+    {
+        var viewModel = await pageManagerService.FavoritedItems(page);
+        return View(viewModel);
+    }
+    
+    public IActionResult Privacy() => View();
 
-            var favoritedItems = new List<Item>();
-            var validItemIds = new List<Guid>();
-
-            foreach (var id in user.FavoritedItemsId)
-            {
-                var item = await itemRepository.GetItemNoTrackingAsync(id);
-                if (item == null) continue;
-                favoritedItems.Add(item);
-                validItemIds.Add(id);
-            }
-
-            user.FavoritedItemsId = validItemIds;
-            await userRepository.UpdateUserAsync(user);
-
-            var items = favoritedItems.Skip((page - 1) * PageSize).Take(PageSize).ToList();
-            
-            var pageViewModel = new PageViewModel(favoritedItems.Count, page, PageSize);
-            var viewModel = new IndexViewModel(items!, pageViewModel);
-            return View(viewModel);
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
+    {
+        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }
