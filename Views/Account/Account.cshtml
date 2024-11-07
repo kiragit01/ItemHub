@@ -1,3 +1,4 @@
+@using System.Security.Claims
 @model User
 @{
     ViewData["Title"] = Model.Login;
@@ -11,7 +12,7 @@
         <div class="row g-2 justify-content-center">
             <div style="width: 150px;" class="row g-2">
                 <img style="width: calc(var(--bs-gutter-x)* .5 + 130px); height: 130px; object-fit: cover;" 
-                     src="@Model.Avatar" alt="Profile" class="rounded-circle ">
+                     src="..\@Model.Avatar" alt="Profile" class="rounded-circle ">
             </div>
             <div class="row g-2 col-md">
                 <div>
@@ -57,30 +58,33 @@
                 </div>
             </div>
         </div>
-        <div class="col-6">
-            <a asp-action="EditAccount" class="btn btn-primary mt-3 float-end">Изменить</a>
-        </div>
-        <div class="col-6">
-            <a class="btn btn-danger mt-3" data-bs-toggle="modal" data-bs-target="#exampleModal">Удалить</a>
-        </div>
-        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">Удаление</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        Вы уверены, что хотите <strong>безвозвратно</strong> удалить свой аккаунт?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                        <form asp-action="DeleteAccount" asp-controller="Account">
-                            <button type="submit" class="btn btn-primary">Да, удалить</button>
-                        </form>
+        @if (Model.Login == User.FindFirst(ClaimTypes.NameIdentifier)?.Value)
+        {
+            <div class="col-6">
+                <a asp-action="EditAccount" class="btn btn-primary mt-3 float-end">Изменить</a>
+            </div>
+            <div class="col-6">
+                <a class="btn btn-danger mt-3" data-bs-toggle="modal" data-bs-target="#exampleModal">Удалить</a>
+            </div>
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Удаление</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Вы уверены, что хотите <strong>безвозвратно</strong> удалить свой аккаунт?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                            <form asp-action="DeleteAccount" asp-controller="Account">
+                                <button type="submit" class="btn btn-primary">Да, удалить</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        }
     </div>
 </div>

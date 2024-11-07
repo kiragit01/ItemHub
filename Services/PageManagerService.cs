@@ -13,10 +13,9 @@ public class PageManagerService(
     private const int PageSize = 2; // количество элементов на странице
     private const int MainPage = 1; // главная страница
     
-    
     public async Task<IndexViewModel> Index(int? page)
     {
-        var source = itemRepository.AllItems();
+        var source = itemRepository.AllItems().Where(item => item.Published);
         return await ViewModelForIQueryable(source, page);
     }
         
@@ -42,8 +41,9 @@ public class PageManagerService(
             validItemIds.Add(id);
         }
         user.FavoritedItemsId = validItemIds;
+        var items = favoritedItems.Where(item => item.Published).ToList();
         await userRepository.UpdateUserAsync(user);
-        return ViewModelForList(favoritedItems, page);
+        return ViewModelForList(items, page);
     }
     
     private static IndexViewModel ViewModelForList(List<Item> allItems, int? page)

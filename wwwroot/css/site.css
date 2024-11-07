@@ -82,3 +82,6 @@ body {
     --bs-body-bg: #121416;
 }
 
+.unpublished{
+    opacity: 0.4;
+}

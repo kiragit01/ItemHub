@@ -1,5 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".published").forEach(function (button) {
+        const card = button.closest(".row")
+        const unpublished = '<div ' +
+            'class="h1 position-absolute top-50 start-50 translate-middle w-auto" ' +
+            'style="z-index: 1" id="unpublished">Скрыто</div>'        
         button.addEventListener("click", async function (e) {
             e.preventDefault();
 
@@ -20,12 +24,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const result = await response.json();
 
-                if (result) {
+                if (!result.isPublished) {
                     button.textContent = "Опубликовать";
-                    button.closest(".row").style.cssText = "filter: opacity(0.4);";
+                    card.style.cssText = "filter: opacity(0.4);";
+                    card.insertAdjacentHTML( 'afterbegin', unpublished )
                 } else {
                     button.textContent = "Скрыть";
-                    button.closest(".row").style.cssText = "filter: opacity(1);";
+                    card.style.cssText = "filter: opacity(1);";
+                    card.removeChild(card.firstChild);
                 }
             } catch (error) {
                 console.error("Ошибка: ", error);
@@ -33,7 +39,8 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
         if (button.textContent === "Опубликовать") {
-            button.closest(".row").style.cssText = "filter: opacity(0.4);";
+            card.style.cssText = "filter: opacity(0.4);";
+            card.insertAdjacentHTML( 'afterbegin', unpublished )
         }
     });
 });

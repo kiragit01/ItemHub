@@ -22,7 +22,7 @@ public class HomeController(IPageManagerService pageManagerService) : Controller
         var viewModel = await pageManagerService.MyItems(page);
         return View(viewModel);
     }
-        
+    
     [Route("favorite")]
     [Authorize(Roles = UserRoles.CUSTOMER)]
     public async Task<IActionResult> FavoritedItems(int? page)

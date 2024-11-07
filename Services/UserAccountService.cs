@@ -11,7 +11,7 @@ public class UserAccountService(
     IMyCookieManager cookieManager)
     : IUserAccountService
 {
-    public async Task<User?> GetUser() => await userRepository.GetUserAsync();
+    public async Task<User?> GetUser(string? login = null) => await userRepository.GetUserAsync(login);
     
     public async Task<string?> EditAccount(EditAccountModel model)
     {
