@@ -5,13 +5,16 @@ using ItemHub.Utilities;
 
 namespace ItemHub.Services;
 
-public class AuthService(IUserRepository userRepository, IMyCookieManager cookieManager) : IAuthService
+public class AuthService(
+    IUserRepository userRepository, 
+    IMyCookieManager cookieManager) 
+    : IAuthService
 {
     public async Task<ResponseMessage> Login(LoginModel model)
     {
         var user = await userRepository.LogInAsync(model.Login, model.Password);
         if (user == null) return ResponseMessage.Error;
-        await cookieManager.Authentication(user);
+        await cookieManager.AuthenticationAsync(user);
         return ResponseMessage.Ok;
     }
     
@@ -24,17 +27,18 @@ public class AuthService(IUserRepository userRepository, IMyCookieManager cookie
             ResponseMessage.ErrorLogin => "Этот логин занят.",
             _ => null
         };
-        var avatar = await UploadFiles.UploadAvatar(model.Avatar, model.Login);
+        if (error != null) return error;
+        var avatar = UploadFiles.UploadAvatarAsync(model.Avatar, model.Login);
         var salt = HashedPassword.GeneratedSalt;
         var hashedPassword = HashedPassword.Hashed(model.Password, salt);
-        var user = new User(model.Name, model.Login, model.Email, hashedPassword, salt, avatar);
+        var user = new User(model.Name, model.Login, model.Email, hashedPassword, salt, avatar.Result);
 
         if (model.Seller) user.AddRoles([UserRoles.SELLER]);
         else user.AddRoles([UserRoles.CUSTOMER]);
 
         await userRepository.AddUserAsync(user);
-        await cookieManager.Authentication(user);
-        return error;
+        await cookieManager.AuthenticationAsync(user);
+        return null;
     }
     
     public async Task Logout() => await cookieManager.SignOutAsync();

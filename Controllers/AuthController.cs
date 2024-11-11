@@ -7,13 +7,13 @@ namespace ItemHub.Controllers;
 
 public class AuthController(IAuthService authService) : Controller
 {
-    [HttpGet] [Route("register")]
+    [HttpGet("register")]
     public IActionResult Register() => View();
 
-    [HttpGet] [Route("login")]
+    [HttpGet("login")]
     public IActionResult Login() => View();
 
-    [HttpPost] [Route("register")] 
+    [HttpPost("register")] 
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterModel model)
     {
@@ -24,7 +24,7 @@ public class AuthController(IAuthService authService) : Controller
             : RedirectToAction("Index", "Home");
     }
 
-    [HttpPost] [Route("login")] 
+    [HttpPost("login")] 
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginModel model)
     {

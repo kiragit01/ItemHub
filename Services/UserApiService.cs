@@ -5,8 +5,7 @@ namespace ItemHub.Services;
 
 public class UserApiService(
     IUserRepository userRepository,
-    IItemRepository itemRepository,
-    IUserContext userContext)
+    IItemRepository itemRepository)
     : IUserApiService
 {
     public async Task<int> GetFavoritedItemsCountAsync()

@@ -3,7 +3,7 @@ namespace ItemHub.Utilities;
 
 public static class UploadFiles
 {
-    public static async Task<string> UploadAvatar(IFormFile? file, string userLogin)
+    public static async Task<string> UploadAvatarAsync(IFormFile? file, string userLogin)
     {
         if (file == null)
         {
@@ -30,7 +30,7 @@ public static class UploadFiles
         return pathForList;
     }
 
-    public static async Task<List<string>> UploadItemImages(IFormFileCollection? files, string userLogin, Guid id)
+    public static async Task<List<string>> UploadItemImagesAsync(IFormFileCollection? files, string userLogin, Guid id)
     {
         if (files == null || files.Count == 0)
         {

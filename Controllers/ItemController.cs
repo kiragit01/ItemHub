@@ -10,7 +10,7 @@ namespace ItemHub.Controllers;
 public class ItemController(IItemService itemService) : Controller
 {
 
-    [Route("/item")]
+    [HttpGet("/item")]
     public async Task<ActionResult> ViewItem(Guid id)
     {
         var item = await itemService.GetItemNoTracking(id);
@@ -19,11 +19,11 @@ public class ItemController(IItemService itemService) : Controller
             : View(item);
     }
 
-    [Route("/create")]
+    [HttpGet("/create")]
     [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
     public ActionResult Create() => View();
 
-    [HttpPost] [Route("/create")] [ValidateAntiForgeryToken]
+    [HttpPost("/create")] [ValidateAntiForgeryToken]
     [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
     public async Task<ActionResult> Create(ItemModel model)
     {
@@ -34,7 +34,7 @@ public class ItemController(IItemService itemService) : Controller
             : RedirectToAction("Index", "Home");
     }
         
-    [Route("/edit")]
+    [HttpGet("/edit")]
     [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
     public async Task<ActionResult> Edit(Guid id)
     {
@@ -45,8 +45,7 @@ public class ItemController(IItemService itemService) : Controller
             : View(item);
     }
 
-    [HttpPut]
-    [Route("/update")]
+    [HttpPut("/update")]
     [Authorize(Roles = $"{UserRoles.SELLER},{UserRoles.ADMIN}")]
     [ValidateAntiForgeryToken]
     public async Task<ActionResult> Update(Guid id, ItemModel model, List<string> savedImages)

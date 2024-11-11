@@ -8,6 +8,14 @@ namespace ItemHub.Repository;
 public class ItemRepository(DataBaseContext db) : IItemRepository
 {
     public IQueryable<Item> AllItems() => db.Items;
+    public async Task RenameItemsUserAsync(List<Item> items, string newLogin)
+    {
+        var itemIds = items.Select(item => item.Id).ToList();
+        await db.Items
+            .Where(item => itemIds.Contains(item.Id))
+            .ExecuteUpdateAsync(setters 
+                => setters.SetProperty(item => item.Creator, newLogin));
+    }
     
     public async Task<Item?> GetItemNoTrackingAsync(Guid id) => 
         await db.Items.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
@@ -34,5 +42,12 @@ public class ItemRepository(DataBaseContext db) : IItemRepository
     {
         db.Items.Remove(item);
         await db.SaveChangesAsync();
+    }
+    public async Task RemoveItemsUserAsync(List<Item> items)
+    {
+        var itemIds = items.Select(item => item.Id).ToList();
+        await db.Items
+            .Where(item => itemIds.Contains(item.Id))
+            .ExecuteDeleteAsync();
     }
 }

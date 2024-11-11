@@ -4,6 +4,6 @@ namespace ItemHub.Interfaces;
 
 public interface IMyCookieManager
 {
-    public Task Authentication(User user);
+    public Task AuthenticationAsync(User user);
     public Task SignOutAsync();
 }

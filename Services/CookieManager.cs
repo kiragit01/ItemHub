@@ -9,7 +9,7 @@ namespace ItemHub.Services;
 public class CookieManager(IHttpContextAccessor httpContextAccessor) : IMyCookieManager
 {
     private readonly HttpContext _httpContext = httpContextAccessor.HttpContext!;
-    public async Task Authentication(User user)
+    public async Task AuthenticationAsync(User user)
     {
         // создаем claim
         var claims = new List<Claim>

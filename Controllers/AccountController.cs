@@ -8,8 +8,7 @@ namespace ItemHub.Controllers;
 
 public class AccountController(IUserAccountService userAccountService) : Controller
 {
-    [HttpGet] 
-    [Route("profile/{login?}")]
+    [HttpGet("profile/{login?}")]
     public async Task<IActionResult> Account(string? login)
     {
         var user = await userAccountService.GetUser(login);
@@ -18,8 +17,8 @@ public class AccountController(IUserAccountService userAccountService) : Control
             : View(user);
     }
         
-    [HttpGet] [Authorize]
-    [Route("account/edit")] 
+    [Authorize]
+    [HttpGet("account/edit")] 
     public async Task<IActionResult> EditAccount()
     {
         var user = await userAccountService.GetUser();
@@ -28,7 +27,7 @@ public class AccountController(IUserAccountService userAccountService) : Control
         return View(editUser);
     }
 
-    [HttpPost] [Route("account/edit")] 
+    [HttpPost("account/edit")] 
     [ValidateAntiForgeryToken] [Authorize]
     public async Task<IActionResult> EditAccount(EditAccountModel model)
     {
