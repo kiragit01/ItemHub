@@ -6,7 +6,9 @@ using ItemHub.Utilities;
 namespace ItemHub.Services;
 
 public class AuthService(
-    IUserRepository userRepository, 
+    IUserRepository userRepository,
+    ICacheRepository cacheRepository,
+    IUserContext userContext,
     IMyCookieManager cookieManager) 
     : IAuthService
 {
@@ -14,6 +16,7 @@ public class AuthService(
     {
         var user = await userRepository.LogInAsync(model.Login, model.Password);
         if (user == null) return ResponseMessage.Error;
+        await cacheRepository.SetAsync(user.Login, user, Constants.UserCacheSlidingExpiration);
         await cookieManager.AuthenticationAsync(user);
         return ResponseMessage.Ok;
     }
@@ -37,9 +40,14 @@ public class AuthService(
         else user.AddRoles([UserRoles.CUSTOMER]);
 
         await userRepository.AddUserAsync(user);
+        await cacheRepository.SetAsync(user.Login, user, Constants.UserCacheSlidingExpiration);
         await cookieManager.AuthenticationAsync(user);
         return null;
     }
     
-    public async Task Logout() => await cookieManager.SignOutAsync();
+    public async Task Logout()
+    {
+        await cacheRepository.RemoveAsync(userContext.Login);
+        await cookieManager.SignOutAsync();
+    }
 }

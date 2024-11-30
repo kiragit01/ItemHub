@@ -5,7 +5,8 @@ namespace ItemHub.Services;
 
 public class UserApiService(
     IUserRepository userRepository,
-    IItemRepository itemRepository)
+    IItemRepository itemRepository,
+    ICacheRepository cacheRepository)
     : IUserApiService
 {
     public async Task<int> GetFavoritedItemsCountAsync()
@@ -27,12 +28,11 @@ public class UserApiService(
             else itemsToRemove.Add(id);
         }
 
+        await cacheRepository.RemoveAsync(user.Login);
         if (itemsToRemove.Count <= 0) return validItems;
-        
         foreach (var id in itemsToRemove)
             user.FavoritedItemsId.Remove(id);
         await userRepository.UpdateUserAsync(user);
-
         return validItems;
     }
 

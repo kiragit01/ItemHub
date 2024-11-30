@@ -137,9 +137,6 @@ submitForm.addEventListener("submit", (e) => {
         body: formData
     })
         .then(response => {
-            if (!response.ok) {
-                throw new Error("Ошибка при обновлении");
-            }
             return response.text(); // Или JSON, в зависимости от ответа сервера
         })
         .then(data => {

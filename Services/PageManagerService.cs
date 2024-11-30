@@ -1,13 +1,16 @@
 using ItemHub.Interfaces;
 using ItemHub.Models.OnlyItem;
 using ItemHub.Models.Pages;
-using Microsoft.EntityFrameworkCore;
+using ItemHub.Models.User;
+using ItemHub.Utilities;
 
 namespace ItemHub.Services;
 
 public class PageManagerService(
     IItemRepository itemRepository,
-    IUserRepository userRepository) 
+    IUserRepository userRepository,
+    ICacheRepository cacheRepository,
+    IUserContext userContext) 
     : IPageManagerService
 {
     private const int PageSize = 2; // количество элементов на странице
@@ -15,27 +18,39 @@ public class PageManagerService(
     
     public async Task<IndexViewModel> Index(int? page)
     {
-        var source = itemRepository.AllItems().Where(item => item.Published);
-        return await ViewModelForIQueryable(source, page);
+        var cache = await cacheRepository.GetAsync<List<Item>>("index");
+        if (cache != null) return ViewModelForList(cache, page);
+        var source = itemRepository.AllItems().Where(item => item.Published).ToList();
+        await cacheRepository.SetAsync("index", source, absoluteExpireTime: Constants.IndexCacheAbsoluteExpiration);
+        return ViewModelForList(source, page);
     }
         
     public async Task<IndexViewModel?> MyItems(int? page)
     {
+        var cache = await cacheRepository.GetAsync<User>(userContext.Login);
+        if (cache != null) return ViewModelForList(cache.CustomItems, page);
         var user = await userRepository.GetUserAsync();
-        if (user == null) return null;
-        var userItems = user.CustomItems;
-        return ViewModelForList(userItems, page);
+        await cacheRepository.SetAsync(userContext.Login, user, Constants.UserCacheSlidingExpiration);
+        return user != null 
+            ? ViewModelForList(user.CustomItems, page) 
+            : null;
     }
         
     public async Task<IndexViewModel?> FavoritedItems(int? page)
     {
-        var user = await userRepository.GetUserAsync();
-        if (user == null) return null;
+        var user = await cacheRepository.GetAsync<User>(userContext.Login);
+        if (user == null)
+        {
+            user = await userRepository.GetUserAsync();
+            if (user == null) return null;
+            await cacheRepository.SetAsync(userContext.Login, user, Constants.UserCacheSlidingExpiration);
+        }
         var favoritedItems = new List<Item>();
         var validItemIds = new List<Guid>();
         foreach (var id in user.FavoritedItemsId)
         {
-            var item = await itemRepository.GetItemNoTrackingAsync(id);
+            var item = await cacheRepository.GetAsync<Item>(id.ToString()) 
+                       ?? await itemRepository.GetItemNoTrackingAsync(id);
             if (item == null) continue;
             favoritedItems.Add(item);
             validItemIds.Add(id);
@@ -51,14 +66,6 @@ public class PageManagerService(
         var mainPage = page ?? MainPage;
         var items = allItems.Skip((mainPage - 1) * PageSize).Take(PageSize).ToList();
         var pageViewModel = new PageViewModel(allItems.Count, mainPage, PageSize);
-        return new IndexViewModel(items, pageViewModel);
-    }
-    private static async Task<IndexViewModel> ViewModelForIQueryable(IQueryable<Item> allItems, int? page)
-    {
-        var mainPage = page ?? MainPage;
-        var count = allItems.Count();
-        var items = await allItems.Skip((mainPage - 1) * PageSize).Take(PageSize).ToListAsync();
-        var pageViewModel = new PageViewModel(count, mainPage, PageSize);
         return new IndexViewModel(items, pageViewModel);
     }
 }

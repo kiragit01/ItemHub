@@ -48,8 +48,13 @@
 <div class="input-group has-validation w-price float-end mt-2 mb-5">
     <div class="input-group-text btn btn-success" for="validationCustomPrice">Price:</div>
     <span class="border-bottom-price"></span>
-    <input type="number" value="@Model.Price" form="submit1" name="Price" oninput="maxLengthCheck(this); 
-           this.value=this.value.slice(0,this.maxLength||1/1);this.value=(this.value   < 0) ? (1/1) : this.value;" maxlength="7"
+    <input type="number" value="@Model.Price" form="submit1" name="Price" oninput="
+            maxLengthCheck(this); 
+            this.value = this.value.slice(0, this.maxLength || 1 / 1);
+            this.value = (this.value < 0) 
+                ? (1/1) 
+                : this.value;
+            " maxlength="7"
            class="form-control btn btn-success active" id="validationCustomPrice" min="0" placeholder="999" required>
     <div class="input-group-text btn btn-success">$</div>
     <div></div>
@@ -62,7 +67,7 @@
             object.value = object.value.slice(0, object.maxLength)
     }
 </script>
-<script src="~/js/uploadImages.js"></script>
+<script src="~/js/uploadImages.js" asp-append-version="true"></script>
 
 
 

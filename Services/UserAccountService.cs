@@ -5,13 +5,16 @@ using ItemHub.Utilities;
 namespace ItemHub.Services;
 
 public class UserAccountService(
-    IUserRepository userRepository, 
-    IItemRepository itemRepository, 
+    IUserRepository userRepository,
+    IItemRepository itemRepository,
+    ICacheRepository cacheRepository,
     IUserContext userContext, 
     IMyCookieManager cookieManager)
     : IUserAccountService
 {
-    public async Task<User?> GetUser(string? login = null) => await userRepository.GetUserAsync(login);
+    public async Task<User?> GetUser(string? login = null) =>
+           await cacheRepository.GetAsync<User>(login ?? userContext.Login)
+        ?? await userRepository.GetUserAsync(login);
     
     public async Task<string?> EditAccount(EditAccountModel model)
     {
@@ -27,14 +30,26 @@ public class UserAccountService(
         if (user == null) return "Пользователь не найден";
         if (user.Login != model.Login)
         {
-            _ = itemRepository.RenameItemsUserAsync(user.CustomItems, model.Login);
+            await itemRepository.RenameItemsUserAsync(user.CustomItems, model.Login);
+            var itemCacheKeys = user.CustomItems.Select(item => $"Item_{item.Id}").ToList();
+            foreach (var key in itemCacheKeys)
+            {
+                await cacheRepository.RemoveAsync(key);
+            }
         }
+        await cacheRepository.RemoveAsync("index");
+        await cacheRepository.RemoveAsync(user.Login);
         var avatar = model.Avatar == null 
             ? user.Avatar 
             : await UploadFiles.UploadAvatarAsync(model.Avatar, model.Login);
-        user.UpdateDataUser(model.Name, 
-            model.Login, model.Email, avatar, 
-            model.Description, model.Phone);
+        
+        user.UpdateDataUser(
+            model.Name, 
+            model.Login, 
+            model.Email, 
+            avatar, 
+            model.Description, 
+            model.Phone);
 
         await userRepository.UpdateUserAsync(user);
         await cookieManager.AuthenticationAsync(user);
@@ -58,8 +73,9 @@ public class UserAccountService(
     {
         var user = await userRepository.GetUserAsync();
         if (user == null) return ResponseMessage.Error;
-        _ = itemRepository.RemoveItemsUserAsync(user.CustomItems);
-        _ = userRepository.DeleteUserAsync(user);
+        await itemRepository.RemoveItemsUserAsync(user.CustomItems);
+        await userRepository.DeleteUserAsync(user);
+        await cacheRepository.RemoveAsync(user.Login);
         await cookieManager.SignOutAsync();
         return ResponseMessage.Ok;
     }

@@ -27,6 +27,16 @@ namespace ItemHub.Models.OnlyItem
             Price = price;
             Published = published;
         }
+
+        public void Update(string title, string? description, List<string> pathImages, int price, bool published)
+        {
+            Title = title;
+            Description = description;
+            UpdatedDate = DateTime.UtcNow;
+            PathImages = pathImages;
+            Price = price;
+            Published = published;
+        }
         public void UpdateDate() => UpdatedDate = DateTime.UtcNow;
     }
 }

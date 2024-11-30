@@ -19,6 +19,14 @@
             <a asp-action="Create" asp-controller="Item" class="btn btn-primary" >Create Item</a>
         </div>
     }
+    <div class="col-md-8 m-auto">
+        <div class="input-group">
+            <input type="search" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="search-addon" />
+            <button class="btn btn-outline-primary" type="submit" data-mdb-ripple-init>
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        </div>
+    </div>
 </div>
 @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.SELLER)
 {

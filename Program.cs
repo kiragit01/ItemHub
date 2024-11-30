@@ -1,21 +1,16 @@
 using ItemHub.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using ItemHub.Interfaces;
 using ItemHub.Repository;
 using ItemHub.Services;
 using ItemHub.Utilities;
-using ICookieManager = Microsoft.AspNetCore.Authentication.Cookies.ICookieManager;
-
+using Microsoft.AspNetCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddAuthorization();
-builder.Services.AddDbContext<DataBaseContext>(options => 
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
@@ -23,7 +18,20 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
                     options.Cookie.Name = "authCookie";
                 });
 
+builder.Services.AddDbContext<DataBaseContext>(options => 
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddStackExchangeRedisCache(options => 
+    options.Configuration = builder.Configuration.GetConnectionString("Redis"));
+
+// var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
+//     .DefaultIndex("items"); // Задайте имя индекса
+//
+// var client = new ElasticClient(settings);
+//
+// builder.Services.AddSingleton<IElasticClient>(client);
+
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<ICacheRepository, RedisCacheRepository>();
 builder.Services.AddScoped<IUserAccountService, UserAccountService>();
 builder.Services.AddScoped<IPageManagerService, PageManagerService>();
 builder.Services.AddScoped<IMyCookieManager, CookieManager>(); 
@@ -35,16 +43,32 @@ builder.Services.AddScoped<IUserContext, UserContext>();
 builder.Services.AddScoped<IAuthService, AuthService>(); 
 builder.Services.AddScoped<IItemService, ItemService>(); 
 
-
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
+    
     app.UseHsts();
+}
+else
+{
+    app.UseExceptionHandler(applicationBuilder => 
+        {
+            applicationBuilder.Run(async(context) => 
+            {
+                //пытаемся получить информацию об исключении
+                var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                if (exceptionHandlerPathFeature != null)
+                    await context.Response.WriteAsync($"Error: {exceptionHandlerPathFeature.Error.Message}");
+                else
+                    await context.Response.WriteAsync("Unknown Error");
+            });
+        });
 }
 
 app.UseHttpsRedirection();
@@ -56,8 +80,6 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.MapGet("/t", [Authorize] () => "Hello World!");
 
 app.MapControllerRoute(
     name: "default",
