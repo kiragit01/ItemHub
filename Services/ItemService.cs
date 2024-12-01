@@ -54,7 +54,7 @@ public class ItemService(
         pathImages.AddRange(savedImages);
         if(pathImages.Count != 1 && pathImages[0] == "images/NoImage.png") pathImages.RemoveAt(0);
         
-        item.Update(model.Title, model.Description, pathImages, model.Price, !model.Published); //TODO Реализовать publiched в View
+        item.Update(model.Title, model.Description, pathImages, model.Price, !model.Published); //TODO Реализовать published в View
         await cacheRepository.RemoveAsync("index");
         await cacheRepository.RemoveAsync(userContext.Login);
         await itemRepository.UpdateItemAsync(item);
@@ -69,6 +69,8 @@ public class ItemService(
         if (userContext.Login != item.Creator) return null;
         await itemRepository.RemoveItemAsync(item);
         await cacheRepository.RemoveAsync($"Item_{item.Id}");
+        await cacheRepository.RemoveAsync("index");
+        await cacheRepository.RemoveAsync(userContext.Login);
         return null;
     }
 }

@@ -5,6 +5,7 @@ namespace ItemHub.Services;
 
 public class ItemApiService(
     IItemRepository itemRepository,
+    ICacheRepository cacheRepository,
     IUserContext userContext)
     : IItemApiService
 {
@@ -19,7 +20,8 @@ public class ItemApiService(
 
         item.Published = !item.Published;
         await itemRepository.UpdateItemAsync(item);
-
+        await cacheRepository.RemoveAsync("index");
+        await cacheRepository.RemoveAsync(userContext.Login);
         return Result<bool>.Ok(item.Published);
     }
 

@@ -6,6 +6,7 @@ using ItemHub.Repository;
 using ItemHub.Services;
 using ItemHub.Utilities;
 using Microsoft.AspNetCore.Diagnostics;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,8 +21,21 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddDbContext<DataBaseContext>(options => 
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddStackExchangeRedisCache(options => 
-    options.Configuration = builder.Configuration.GetConnectionString("Redis"));
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    var redisConfiguration = builder.Configuration.GetConnectionString("Redis");
+    var configurationOptions = ConfigurationOptions.Parse(redisConfiguration!, true);
+
+    // Настраиваем параметры подключения
+    configurationOptions.ConnectTimeout = 1000; // 1 секунда
+    configurationOptions.ConnectRetry = 1; // Без повторных попыток подключения
+    configurationOptions.AbortOnConnectFail = true; // Немедленный отказ при недоступности
+    configurationOptions.AsyncTimeout = 1000; // 1 секунда для асинхронных операций
+    configurationOptions.SyncTimeout = 1000;
+
+    options.ConfigurationOptions = configurationOptions;
+});
 
 // var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
 //     .DefaultIndex("items"); // Задайте имя индекса
@@ -31,6 +45,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 // builder.Services.AddSingleton<IElasticClient>(client);
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton(new CircuitBreaker(failureThreshold: 1, openTime: TimeSpan.FromSeconds(30)));
 builder.Services.AddSingleton<ICacheRepository, RedisCacheRepository>();
 builder.Services.AddScoped<IUserAccountService, UserAccountService>();
 builder.Services.AddScoped<IPageManagerService, PageManagerService>();
