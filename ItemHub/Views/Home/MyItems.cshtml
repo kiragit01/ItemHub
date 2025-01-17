@@ -3,3 +3,11 @@
     ViewData["Title"] = "My Items";
 }
 @await Html.PartialAsync("Index")
+@section Scripts {
+    <script>
+        window.IS_MYITEMS_PAGE = true;
+    </script>
+    <link rel="stylesheet" href="~/css/dual-slider.css" asp-append-version="true" />
+    <script src="~/js/search-items.js" asp-append-version="true"></script>
+    <script src="~/js/dual-slider.js" asp-append-version="true"></script>
+}

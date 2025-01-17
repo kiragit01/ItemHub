@@ -17,8 +17,8 @@ namespace ItemHub.Models.User
         public string Avatar { get; set; } = avatar;
         public string? Description { get; set; }
         public string? Phone { get; set; }
-        public DateTime DateTimeCreateAccount { get; set; } = DateTime.UtcNow;
-
+        public DateTime DateTimeCreateAccount { get; init; } = DateTime.Now;
+        
         public List<string> Roles { get; set; } = [];
         public List<Item> CustomItems { get; set; } = []; /*Для Продавца*/
         public List<Guid> FavoritedItemsId { get; set; } = []; /*Для Покупателя*/

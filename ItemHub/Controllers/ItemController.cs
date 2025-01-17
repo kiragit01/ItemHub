@@ -9,14 +9,13 @@ namespace ItemHub.Controllers;
 
 public class ItemController(IItemService itemService) : Controller
 {
-
     [HttpGet("/item")]
     public async Task<ActionResult> ViewItem(Guid id)
     {
         var item = await itemService.GetItemNoTracking(id);
-        return item == null
-            ? BadResult()
-            : View(item);
+        if (item == null) BadResult();
+        await itemService.RegisterViewAsync(id);
+        return View(item);
     }
 
     [HttpGet("/create")]

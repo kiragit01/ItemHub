@@ -9,18 +9,31 @@ namespace ItemHub.Controllers;
 
 public class HomeController(IPageManagerService pageManagerService) : Controller
 {
-    public async Task<IActionResult> Index(int? page)
+    public async Task<IActionResult> Index()
     {
-        var viewModel = await pageManagerService.Index(page);
-        return View(viewModel);
+        return View();
     }
-        
+    
+    [HttpGet]
+    public async Task<IActionResult> GetMaxPrice()
+    {
+        var maxPrice = await pageManagerService.MaxPrice();
+        return Json(new { maxPrice });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> SearchItemsAjax(
+        string query, int? minPrice, int? maxPrice, int? page, bool onlyMine = false)
+    {
+        var indexViewModel = await pageManagerService.SearchItem(query, minPrice, maxPrice, page, onlyMine);
+        return PartialView("_SearchResultsPartial", indexViewModel);
+    }
+
     [Route("my")]
     [Authorize(Roles = UserRoles.SELLER)]
-    public async Task<IActionResult> MyItems(int? page)
+    public async Task<IActionResult> MyItems()
     {
-        var viewModel = await pageManagerService.MyItems(page);
-        return View(viewModel);
+        return View();
     }
     
     [Route("favorite")]

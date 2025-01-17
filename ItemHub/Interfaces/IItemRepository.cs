@@ -10,6 +10,7 @@ public interface IItemRepository
     public Task<Item?> GetItemAsync(Guid id);
     public Task<bool> ItemExistsAsync(Guid id);
     public Task AddItemAsync(Item item);
+    public Task<bool> AddViewItemAsync(Guid id);
     public Task UpdateItemAsync(Item item);
     public Task RemoveItemAsync(Item item);
     public Task RemoveItemsUserAsync(List<Item> items);

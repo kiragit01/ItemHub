@@ -6,11 +6,12 @@ using ItemHub.Repository;
 using ItemHub.Services;
 using ItemHub.Utilities;
 using Microsoft.AspNetCore.Diagnostics;
+using Nest;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+// --- Аутентификация и Авторизация ---
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
@@ -19,36 +20,48 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
                     options.Cookie.Name = "authCookie";
                 });
 
+// --- База данных (Postgres) ---
 builder.Services.AddDbContext<DataBaseContext>(options => 
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// --- Redis ---
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     var redisConfiguration = builder.Configuration.GetConnectionString("Redis");
     var configurationOptions = ConfigurationOptions.Parse(redisConfiguration!, true);
-
     // Настраиваем параметры подключения
     configurationOptions.ConnectTimeout = 1000; // 1 секунда
     configurationOptions.ConnectRetry = 1; // Без повторных попыток подключения
     configurationOptions.AbortOnConnectFail = true; // Немедленный отказ при недоступности
     configurationOptions.AsyncTimeout = 1000; // 1 секунда для асинхронных операций
     configurationOptions.SyncTimeout = 1000;
-
     options.ConfigurationOptions = configurationOptions;
 });
 
-// var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-//     .DefaultIndex("items"); // Задайте имя индекса
-//
-// var client = new ElasticClient(settings);
-//
-// builder.Services.AddSingleton<IElasticClient>(client);
+// --- Elasticsearch ---
+var elasticSection = builder.Configuration.GetSection("ElasticSettings");
+var elasticUri = elasticSection.GetValue<string>("Uri");
+var elasticUser = elasticSection.GetValue<string>("Username");
+var elasticPass = elasticSection.GetValue<string>("Password");
+var defaultIndex = elasticSection.GetValue<string>("DefaultIndex");
 
+var settings = new ConnectionSettings(new Uri(elasticUri!))
+    .BasicAuthentication(elasticUser, elasticPass) // Включаем Basic Auth при необходимости
+    .DefaultIndex(defaultIndex); // Задаём индекс по умолчанию
+// Если хотите отключить проверку сертификата (небезопасно! Только для девелопмента)
+// settings.ServerCertificateValidationCallback((o, certificate, chain, errors) => true);
+
+var client = new ElasticClient(settings);
+builder.Services.AddSingleton<IElasticClient>(client);
+
+
+// --- DI ---
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton(new CircuitBreaker(failureThreshold: 1, openTime: TimeSpan.FromSeconds(30)));
 builder.Services.AddSingleton<ICacheRepository, RedisCacheRepository>();
 builder.Services.AddScoped<IUserAccountService, UserAccountService>();
 builder.Services.AddScoped<IPageManagerService, PageManagerService>();
+builder.Services.AddScoped<IItemSearchService, ItemSearchService>();
 builder.Services.AddScoped<IMyCookieManager, CookieManager>(); 
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();

@@ -34,7 +34,7 @@ public class AuthService(
         var avatar = UploadFiles.UploadAvatarAsync(model.Avatar, model.Login);
         var salt = HashedPassword.GeneratedSalt;
         var hashedPassword = HashedPassword.Hashed(model.Password, salt);
-        var user = new User(model.Name, model.Login, model.Email, hashedPassword, salt, avatar.Result);
+        var user = new User(model.Name, model.Login, model.Email, hashedPassword, salt, await avatar);
 
         if (model.Seller) user.AddRoles([UserRoles.SELLER]);
         else user.AddRoles([UserRoles.CUSTOMER]);

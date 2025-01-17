@@ -14,6 +14,7 @@ namespace ItemHub.Models.OnlyItem
         public DateTime? UpdatedDate { get; set; }
         public List<string> PathImages { get; set; }
         public int Price { get; set; }
+        public uint Views { get; set; }
         public bool Published { get; set; }
 
         public Item(Guid id, string title, string? description, string creator, List<string> pathImages, int price, bool published)

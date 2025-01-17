@@ -1,0 +1,149 @@
+@using System.Security.Claims
+@addTagHelper *, ItemHub
+@model ItemHub.Models.Pages.IndexViewModel
+
+@foreach (var item in Model.Items)
+{
+    @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
+    {
+        <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" aria-labelledby="exampleModalLabel-@item.Id" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel-@item.Id">Удаление</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите удалить "@item.Title"?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <form asp-controller="Item" asp-action="Delete">
+                            <input name="id" type="text" value="@item.Id" class="visually-hidden">
+                            <button type="submit" class="btn btn-primary">Да, удалить</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    <div class="card mb-3 col-md-8 m-auto">
+        <div class="row">
+            <div class="col">
+                @if(item.PathImages.Count == 1)
+                {
+                    <div class="exmpl">
+                        <img src="@item.PathImages[0]" class="d-block w-100" alt="не пашет" />
+                    </div>
+                }
+                else
+                {
+                    <div id="carouselExampleIndicators-@item.Id" class="carousel slide" data-bs-ride="true">
+                        <div class="carousel-indicators">
+                            @for (int i = 0; i < item.PathImages.Count; i++)
+                            {
+                                @if(i == 0)
+                                {
+                                    <button type="button" data-bs-target="#carouselExampleIndicators-@item.Id"
+                                            data-bs-slide-to="@i" class="active" aria-current="true"
+                                            aria-label="Slide @(i+1)"></button>
+                                }
+                                else if (i < 10)
+                                {
+                                    <button type="button" data-bs-target="#carouselExampleIndicators-@item.Id"
+                                            data-bs-slide-to="@i" aria-label="Slide @(i+1)"></button>
+                                }
+                                else break;
+                            }
+                        </div>
+                        <div class="carousel-inner">
+                            <div class="carousel-item active exmpl">
+                                <img src="@item.PathImages[0]" class="bd-placeholder-img bd-placeholder-img-lg d-block w-100" alt="не пашет"/>
+                            </div>
+                            @for (int i = 1; i < item.PathImages.Count; i++)
+                            {
+                                if (i < 10)
+                                {
+                                    <div class="carousel-item exmpl">
+                                        <img src="@item.PathImages[i]" class="bd-placeholder-img bd-placeholder-img-lg d-block w-100" alt="не пашет"/>
+                                    </div>
+                                }
+                                else break;
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="col-md-8">
+                <div class="card-body h-100 d-grid align-content-between">
+                    <a href="/item?id=@item.Id" class="text-decoration-none">
+                        <div class="custom-color">
+                            <div class="d-flex justify-content-between">
+                                <h5 class="card-title">@item.Title</h5>
+                                <p class="card-title">@(item.Price)$</p>
+                            </div>
+                            <p class="card-text line-clamp-3">@item.Description</p>
+                        </div>
+                    </a>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <a href="/item?id=@item.Id" class="text-decoration-none">
+                            <p class="card-text mb-0">
+                                <small class="text-muted">@@@item.Creator</small><br/>
+                                @if (item.UpdatedDate == null)
+                                {
+                                    <small class="text-muted">@item.CreatedDate.ToLocalTime()</small>
+                                }
+                                else
+                                {
+                                    <small class="text-muted">Обновлено: @item.UpdatedDate?.ToLocalTime()</small>
+                                }
+                            </p>
+                        </a>
+                        @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
+                        {
+                            <div class="btn-group dropup dropup-center">
+                                <a href="/edit?id=@item.Id" class="btn btn-primary btn-sm" type="button">
+                                    Редактировать
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="visually-hidden">Toggle Dropdown</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item link-danger" data-bs-toggle="modal"
+                                           data-bs-target="#exampleModal-@item.Id">Удалить</a></li>
+                                    <li>
+                                        @if (item.Published)
+                                        {
+                                            <a type="button" class="dropdown-item published" data-id="@item.Id">Скрыть</a>
+                                        }
+                                        else
+                                        {
+                                            <a type="button" class="dropdown-item published" data-id="@item.Id">Опубликовать</a>
+                                        }
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
+                        {
+                            <a type="button" class="btn btn-outline-success btn-sm save-button" data-id="@item.Id">Сохранить</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!Model.Items.Any())
+{
+    <p class="text-center text-muted">Ничего не найдено.</p>
+}
+
+@if (Model.PageViewModel.TotalPages > 1)
+{
+    <div class="justify-content-center d-flex">
+        <page-link page-model="Model.PageViewModel" 
+                   page-action="SearchItemsAjax"></page-link>
+    </div>
+}

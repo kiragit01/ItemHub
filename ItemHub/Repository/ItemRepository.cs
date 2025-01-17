@@ -16,6 +16,15 @@ public class ItemRepository(DataBaseContext db) : IItemRepository
             .ExecuteUpdateAsync(setters 
                 => setters.SetProperty(item => item.Creator, newLogin));
     }
+
+    public async Task<bool> AddViewItemAsync(Guid id)
+    {
+        var item = await GetItemAsync(id);
+        if (item == null) return false;
+        item.Views++;
+        await db.SaveChangesAsync();
+        return true;
+    }
     
     public async Task<Item?> GetItemNoTrackingAsync(Guid id) => 
         await db.Items.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
