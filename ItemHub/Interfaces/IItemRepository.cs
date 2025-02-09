@@ -8,6 +8,7 @@ public interface IItemRepository
     public Task RenameItemsUserAsync(List<Item> items, string newLogin);
     public Task<Item?> GetItemNoTrackingAsync(Guid id);
     public Task<Item?> GetItemAsync(Guid id);
+    public Task<int> GetMaxPriceAsync();
     public Task<bool> ItemExistsAsync(Guid id);
     public Task AddItemAsync(Item item);
     public Task<bool> AddViewItemAsync(Guid id);

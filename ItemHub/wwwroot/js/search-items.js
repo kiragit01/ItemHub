@@ -148,6 +148,9 @@ function doSearch(page, pushHistory = true) {
     if (window.IS_MYITEMS_PAGE === true) {
         url += "&onlyMine=true";
     }
+    if (window.IS_MY_FAVORITED_ITEMS_PAGE === true) {
+        url += "&favorite=true";
+    }
     fetch(url)
         .then(resp => resp.text())
         .then(html => {

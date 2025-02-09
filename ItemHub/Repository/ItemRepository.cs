@@ -32,6 +32,9 @@ public class ItemRepository(DataBaseContext db) : IItemRepository
     public async Task<Item?> GetItemAsync(Guid id) => 
         await db.Items.FirstOrDefaultAsync(o => o.Id == id);
     
+    public async Task<int> GetMaxPriceAsync() => 
+        await db.Items.MaxAsync(o => o.Price);
+    
     public async Task<bool> ItemExistsAsync(Guid id) => 
         await db.Items.FirstOrDefaultAsync(o => o.Id == id) != null;
     

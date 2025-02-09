@@ -2,3 +2,11 @@
     ViewData["Title"] = "Favorited";
 }
 @await Html.PartialAsync("Index")
+@section Scripts {
+    <script>
+        window.IS_MY_FAVORITED_ITEMS_PAGE = true;
+    </script>
+    <link rel="stylesheet" href="~/css/dual-slider.css" asp-append-version="true" />
+    <script src="~/js/search-items.js" asp-append-version="true"></script>
+    <script src="~/js/dual-slider.js" asp-append-version="true"></script>
+}

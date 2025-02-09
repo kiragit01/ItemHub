@@ -1,133 +1,89 @@
+using ItemHub.HealthChecks;
 using ItemHub.Interfaces;
 using ItemHub.Models.OnlyItem;
-using Nest;
 
 namespace ItemHub.Services;
 
-public class ItemSearchService(
-    IElasticClient elasticClient, 
-    IItemRepository itemRepository)
+public class ItemSearchService( 
+    IItemRepository itemRepository,
+    IUserRepository userRepository,
+    ElasticSearch elasticSearch,
+    ElasticHealthCheck elasticHealthCheck,
+    IUserContext userContext) 
     : IItemSearchService
 {
-    // нужно для IndexAllAsync
-
-    // Добавим в конструктор ещё IItemRepository, чтобы иметь доступ к БД для полной переиндексации
-
-    public async Task<List<Item>> SearchItemsAsync(string query, int? minPrice, int? maxPrice)
-    {
-        // Если запрос начинается с '@', будем искать по Creator
-        bool searchByUser = !string.IsNullOrWhiteSpace(query) && query.StartsWith("@");
-        string actualQuery = searchByUser ? query.Substring(1) : query; 
-        // если query="@ivan", то actualQuery="ivan"
-
-        // Подстрахуемся от отрицательных цен
-        int validMin = minPrice.GetValueOrDefault(0);
-        if (validMin < 0) validMin = 0;
-        int validMax = maxPrice.GetValueOrDefault(int.MaxValue);
-        if (validMax < 0) validMax = 0;
-
-        var response = await elasticClient.SearchAsync<Item>(s => s
-            .Query(q => q
-                .Bool(b => b
-                    .Must(
-                        mq =>
-                        {
-                            if (searchByUser)
-                            {
-                                // Поиск по Creator
-                                // Если нужно точное совпадение, можно использовать .Term(), но тогда Creator следует индексировать как keyword.
-                                // Пока сделаем Match, чтобы искал "ivan" в "Ivanov" и т.п.
-                                return mq.Match(m => m
-                                    .Field(f => f.Creator)
-                                    .Query(actualQuery)
-                                );
-                            }
-                            if (!string.IsNullOrWhiteSpace(actualQuery))
-                            {
-                                // Поиск по Title (boost=3) / Description
-                                return mq.MultiMatch(m => m
-                                    .Query(actualQuery)
-                                    .Fields(f => f
-                                        .Field(ff => ff.Title, boost: 3.0)
-                                        .Field(ff => ff.Description, boost: 1.0)
-                                    )
-                                );
-                            }
-                            // Пустой запрос -> MatchAll
-                            return mq.MatchAll();
-                        },
-                        fq => fq.Range(r => r
-                            .Field(f => f.Price)
-                            .GreaterThanOrEquals(validMin)
-                            .LessThanOrEquals(validMax)
-                        )
-                    )
-                )
-            )
-            .Size(10000)
-        );
-
-        if (!response.IsValid)
-            throw new Exception($"Ошибка поиска: {response.OriginalException.Message}");
-
-        return response.Documents.ToList();
-    }
-
     public async Task<int> GetMaxPriceAsync()
     {
-        var response = await elasticClient.SearchAsync<Item>(s => s
-            .Aggregations(a => a
-                .Max("max_price", m => m.Field(f => f.Price))
-            )
-            .Size(0)
-        );
+        if (elasticHealthCheck.TryCheck()) 
+            return await elasticSearch.GetMaxPriceAsync();
+        return await itemRepository.GetMaxPriceAsync();
+    }
 
-        if (!response.IsValid)
-            return 0;
+    public async Task<List<Item>> SearchItemsAsync(
+        string query, int? minPrice, int? maxPrice, bool onlyMine = false, bool favorite = false)
+    {
+        if (elasticHealthCheck.TryCheck())
+        {
+            try
+            {
+                var allFound = await elasticSearch.SearchItemsAsync(query, minPrice, maxPrice, onlyMine, favorite);
+                var result = new List<Item>();
+                if (favorite)
+                {
+                    var user = await userRepository.GetUserAsync();
+                    if (user != null)
+                    {
+                        result = allFound.Where(x => x.Published && user.FavoritedItemsId.Contains(x.Id)).ToList();
+                    }
+                }
+                else if (onlyMine)
+                {
+                    result = allFound.Where(x => x.Creator == userContext.Login).ToList();
+                }
+                else
+                {
+                    result = allFound.Where(x => x.Published).ToList();
+                }
+                return result;
+            }
+            catch
+            {
+                // Fallback на БД
+            }
+        }
+        // Fallback — поиск средствами БД
+        var itemsFromDb = itemRepository.AllItems().AsQueryable();
+        itemsFromDb = onlyMine 
+            ? itemsFromDb.Where(x => x.Creator == userContext.Login) 
+            : itemsFromDb.Where(x => x.Published);
 
-        var maxAgg = response.Aggregations.Max("max_price");
-        if (maxAgg == null || !maxAgg.Value.HasValue)
-            return 0;
+        // Псевдо-поиск:
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var lowered = query.ToLower();
+            itemsFromDb = itemsFromDb
+                .Where(x => x.Title.ToLower().Contains(lowered)
+                            || x.Description!.ToLower().Contains(lowered));
+        }
+        if (minPrice.HasValue) itemsFromDb = itemsFromDb.Where(x => x.Price >= minPrice.Value);
+        if (maxPrice.HasValue) itemsFromDb = itemsFromDb.Where(x => x.Price <= maxPrice.Value);
 
-        return (int)maxAgg.Value.Value;
+        var dbFound = itemsFromDb.ToList();
+        return dbFound;
     }
 
     public async Task IndexItemAsync(Item item)
     {
-        var response = await elasticClient.IndexDocumentAsync(item);
-        if (!response.IsValid)
-        {
-            throw new Exception($"Ошибка при индексировании товара {item.Id}: {response.OriginalException.Message}");
-        }
+        if(elasticHealthCheck.TryCheck()) await elasticSearch.IndexItemAsync(item);
     }
 
     public async Task DeleteItemAsync(Guid id)
     {
-        var response = await elasticClient.DeleteAsync<Item>(id);
-        if (!response.IsValid)
-        {
-            throw new Exception($"Ошибка при удалении товара {id}: {response.OriginalException.Message}");
-        }
+        if(elasticHealthCheck.TryCheck()) await elasticSearch.DeleteItemAsync(id);
     }
 
     public async Task IndexAllAsync()
     {
-        var allItems = itemRepository.AllItems().ToList();
-        if (allItems.Count == 0) return;
-
-        var bulkDescriptor = new BulkDescriptor();
-        foreach (var item in allItems)
-        {
-            bulkDescriptor.Index<Item>(op => op
-                .Document(item)
-            );
-        }
-        // var bulkResponse = await elasticClient.BulkAsync(bulkDescriptor);
-        // string debugInfo = bulkResponse.DebugInformation; 
-        // Console.WriteLine(debugInfo);
-        // if (!bulkResponse.IsValid)
-        // {
-        //     throw new Exception("Bulk indexing error: " + bulkResponse.OriginalException.Message);
-        // }
+        if(elasticHealthCheck.TryCheck()) await elasticSearch.IndexAllAsync();
     }
 }

@@ -23,9 +23,9 @@ public class HomeController(IPageManagerService pageManagerService) : Controller
 
     [HttpGet]
     public async Task<IActionResult> SearchItemsAjax(
-        string query, int? minPrice, int? maxPrice, int? page, bool onlyMine = false)
+        string query, int? minPrice, int? maxPrice, int? page, bool onlyMine = false, bool favorite = false)
     {
-        var indexViewModel = await pageManagerService.SearchItem(query, minPrice, maxPrice, page, onlyMine);
+        var indexViewModel = await pageManagerService.SearchItem(query, minPrice, maxPrice, page, onlyMine, favorite);
         return PartialView("_SearchResultsPartial", indexViewModel);
     }
 

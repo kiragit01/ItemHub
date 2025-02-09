@@ -1,4 +1,5 @@
 using ItemHub.Data;
+using ItemHub.HealthChecks;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using ItemHub.Interfaces;
@@ -57,7 +58,6 @@ builder.Services.AddSingleton<IElasticClient>(client);
 
 // --- DI ---
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSingleton(new CircuitBreaker(failureThreshold: 1, openTime: TimeSpan.FromSeconds(30)));
 builder.Services.AddSingleton<ICacheRepository, RedisCacheRepository>();
 builder.Services.AddScoped<IUserAccountService, UserAccountService>();
 builder.Services.AddScoped<IPageManagerService, PageManagerService>();
@@ -70,6 +70,9 @@ builder.Services.AddScoped<IUserApiService, UserApiService>();
 builder.Services.AddScoped<IUserContext, UserContext>(); 
 builder.Services.AddScoped<IAuthService, AuthService>(); 
 builder.Services.AddScoped<IItemService, ItemService>(); 
+builder.Services.AddSingleton<ElasticHealthCheck>();
+builder.Services.AddSingleton<RedisHealthCheck>();
+builder.Services.AddScoped<ElasticSearch>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
