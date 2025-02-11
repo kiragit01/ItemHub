@@ -69,7 +69,7 @@ public class RedisHealthCheck(
                 {
                     _redisOk = false;
                 }
-                logger.LogError("Redis health check error.");
+                logger.LogWarning("Redis health check error.");
             }
         });
     }

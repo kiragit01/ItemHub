@@ -99,35 +99,56 @@
                                 }
                             </p>
                         </a>
-                        @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
-                        {
-                            <div class="btn-group dropup dropup-center">
-                                <a href="/edit?id=@item.Id" class="btn btn-primary btn-sm" type="button">
-                                    Редактировать
-                                </a>
-                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <span class="visually-hidden">Toggle Dropdown</span>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item link-danger" data-bs-toggle="modal"
-                                           data-bs-target="#exampleModal-@item.Id">Удалить</a></li>
-                                    <li>
-                                        @if (item.Published)
-                                        {
-                                            <a type="button" class="dropdown-item published" data-id="@item.Id">Скрыть</a>
-                                        }
-                                        else
-                                        {
-                                            <a type="button" class="dropdown-item published" data-id="@item.Id">Опубликовать</a>
-                                        }
-                                    </li>
-                                </ul>
-                            </div>
-                        }
-                        @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
-                        {
-                            <a type="button" class="btn btn-outline-success btn-sm save-button" data-id="@item.Id">Сохранить</a>
-                        }
+                        <div>
+                            @if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value == item.Creator)
+                            {
+                                <div class="d-flex justify-content-end align-items-center mb-1">
+                                    <img class="icon" src="../files/view.svg" alt="Просмотры">
+                                    <div>@item.Views</div>
+                                </div>
+                                <div class="btn-group dropup dropup-center">
+                                    <a href="/edit?id=@item.Id" class="btn btn-primary btn-sm" type="button">
+                                        Редактировать
+                                    </a>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split"
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded="false">
+                                        <span class="visually-hidden">Toggle Dropdown</span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item link-danger" data-bs-toggle="modal"
+                                               data-bs-target="#exampleModal-@item.Id">Удалить</a></li>
+                                        <li>
+                                            @if (item.Published)
+                                            {
+                                                <a type="button" class="dropdown-item published" data-id="@item.Id">Скрыть</a>
+                                            }
+                                            else
+                                            {
+                                                <a type="button" class="dropdown-item published" data-id="@item.Id">Опубликовать</a>
+                                            }
+                                        </li>
+                                    </ul>
+                                </div>
+                            }
+                            else if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
+                            {
+                                <div class="d-flex justify-content-end align-items-center mb-1">
+                                    <img class="icon" src="../files/view.svg" alt="Просмотры">
+                                    <div>@item.Views</div>
+                                </div>
+                                <a type="button" class="btn btn-outline-success btn-sm save-button" data-id="@item.Id">Сохранить</a>
+                            }
+                            else
+                            {
+                                <div class="d-flex justify-content-end align-items-center">
+                                    <img class="icon" src="../files/view.svg" alt="Просмотры">
+                                    <div>@item.Views</div>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>

@@ -62,10 +62,10 @@ body {
     display: inline-block;
     width: 20px;
     height: 20px;
-    background: url(../images/no-view.svg) 0 0 no-repeat;
+    background: url(../files/no-view.svg) 0 0 no-repeat;
 }
 .password-control.view {
-    background: url(../images/view.svg) 0 0 no-repeat;
+    background: url(../files/view.svg) 0 0 no-repeat;
 }
 
 .h-90{ height: 90%;}
@@ -80,4 +80,9 @@ body {
 [data-bs-theme=dark]{
     --bs-link-main-color-rgb: 255, 255, 255;
     --bs-body-bg: #121416;
+}
+
+.icon{
+    width: 1.5em;
+    height: 1.5em;
 }
