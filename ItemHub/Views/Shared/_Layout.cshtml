@@ -90,9 +90,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.SELLER)
+    {
+        <script src="~/js/published-items.js" asp-append-version="true"></script>
+    }
     @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.CUSTOMER)
     {
-    <script src="~/js/favorite-items.js" asp-append-version="true"></script>
+        <script src="~/js/favorite-items.js" asp-append-version="true"></script>
+        <script src="~/js/favorite-count-item.js" asp-append-version="true"></script>
     }
 </body>
 </html>

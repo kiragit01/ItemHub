@@ -1,73 +1,111 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('productsLoaded', function () {
     const saveButtons = document.querySelectorAll('.save-button');
     const favoriteCountElement = document.getElementById('count');
 
-    // Функция для обновления количества сохранённых товаров с сервера
+    // Храним идентификаторы избранных товаров в Set для исключения дубликатов
+    let favorites = new Set();
+
+    // Инициализация favorites из localStorage (если есть сохранённые данные)
+    const savedFavorites = localStorage.getItem('favorites');
+    if (savedFavorites) {
+        try {
+            JSON.parse(savedFavorites).forEach(id => favorites.add(id));
+        } catch (error) {
+            console.error('Ошибка парсинга favorites из localStorage:', error);
+        }
+    }
+
+    /**
+     * Обновляет внешний вид кнопок сохранения в зависимости от состояния favorites.
+     */
+    function updateButtonsUI() {
+        saveButtons.forEach(button => {
+            const itemId = button.getAttribute('data-id');
+            if (favorites.has(itemId)) {
+                button.classList.remove('btn-outline-success');
+                button.classList.add('btn-success');
+                button.textContent = 'Сохранено';
+            } else {
+                button.classList.remove('btn-success');
+                button.classList.add('btn-outline-success');
+                button.textContent = 'Сохранить';
+            }
+        });
+    }
+
+    /**
+     * Обновляет счётчик избранных товаров.
+     */
     function updateFavoriteCount() {
-        fetch('/api/items/favorites/count', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                favoriteCountElement.textContent = data.count;
-            })
-            .catch(error => console.error('Ошибка при получении количества сохранённых товаров:', error));
+        favoriteCountElement.textContent = favorites.size;
     }
 
-    // Функция для обновления состояния кнопок сохранения
-    function updateSaveButtons() {
-        fetch('/api/items/favorites', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+    /**
+     * Отправляет на сервер текущий список избранных товаров.
+     * Ожидается, что серверный эндпоинт принимает JSON:
+     * { Favorites: [ 'id1', 'id2', ... ] }
+     */
+    function flushFavorites() {
+        // Если нечего отправлять, можно и не делать запрос
+        const favoritesArray = Array.from(favorites);
+        if (!favoritesArray.length) return;
+
+        const payload = { Favorites: favoritesArray };
+
+        fetch('/api/items/favorites/batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         })
-            .then(response => response.json())
-            .then(favoritedItems => {
-                saveButtons.forEach(button => {
-                    const itemId = button.getAttribute('data-id');
-                    if (favoritedItems.includes(itemId)) {
-                        button.classList.remove('btn-outline-success');
-                        button.classList.add('btn-success');
-                        button.textContent = 'Сохранено';
-                    } else {
-                        button.classList.remove('btn-success');
-                        button.classList.add('btn-outline-success');
-                        button.textContent = 'Сохранить';
-                    }
-                });
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Ошибка при обновлении избранных товаров.');
+                }
             })
-            .catch(error => console.error('Ошибка при обновлении кнопок сохранения:', error));
+            .catch(error => console.error('Ошибка при отправке избранных товаров:', error));
     }
 
-    // Обновляем количество и состояние кнопок при загрузке страницы
-    updateFavoriteCount();
-    updateSaveButtons();
+    // Дебаунс: таймер, который сбрасывается при каждом клике
+    let flushTimer = null;
 
+    /**
+     * Устанавливает таймер для отложенной отправки данных.
+     * Если уже есть активный таймер, он сбрасывается.
+     */
+    function scheduleFlush() {
+        if (flushTimer) clearTimeout(flushTimer);
+        flushTimer = setTimeout(() => {
+            flushFavorites();
+            flushTimer = null;
+        }, 5000);
+    }
+
+    // Обработка кликов по кнопкам сохранения
     saveButtons.forEach(button => {
-        const itemId = button.getAttribute('data-id');
-
         button.addEventListener('click', function () {
-            fetch(`/api/items/${itemId}/favorite`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ id: itemId })
-            })
-                .then(response => {
-                    if (response.ok) {
-                        // Обновляем состояние кнопок и количество сохранённых товаров после изменения
-                        updateSaveButtons();
-                        updateFavoriteCount();
-                    } else {
-                        console.log('Ошибка при сохранении/удалении товара.');
-                    }
-                })
-                .catch(error => console.error('Ошибка:', error));
+            const itemId = button.getAttribute('data-id');
+            // Переключаем состояние: добавляем или удаляем идентификатор
+            if (favorites.has(itemId)) {
+                favorites.delete(itemId);
+            } else {
+                favorites.add(itemId);
+            }
+            // Сохраняем актуальный список в localStorage
+            localStorage.setItem('favorites', JSON.stringify(Array.from(favorites)));
+            updateButtonsUI();
+            updateFavoriteCount();
+
+            // Запускаем отложенную отправку
+            scheduleFlush();
         });
     });
+
+    // Если мы на странице, где отображаются избранные товары, сразу отправляем данные
+    if (window.location.pathname.toLowerCase() === '/favorite') {
+        flushFavorites();
+    }
+
+    // Инициализация UI при загрузке страницы
+    updateButtonsUI();
+    updateFavoriteCount();
 });

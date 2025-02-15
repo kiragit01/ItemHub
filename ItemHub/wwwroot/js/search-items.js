@@ -156,7 +156,7 @@ function doSearch(page, pushHistory = true) {
         .then(html => {
             document.getElementById("search-results").innerHTML = html;
             bindPaginationLinks();
-
+            document.dispatchEvent(new CustomEvent('productsLoaded'));
             if (pushHistory) {
                 // Собираем query-параметры УРЛа (для адресной строки):
                 let newUrlParts = [];

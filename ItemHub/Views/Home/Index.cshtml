@@ -82,8 +82,4 @@
     <link rel="stylesheet" href="~/css/dual-slider.css" asp-append-version="true" />
     <script src="~/js/search-items.js" asp-append-version="true"></script>
     <script src="~/js/dual-slider.js" asp-append-version="true"></script>
-    @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.SELLER)
-    {
-        <script src="~/js/published-items.js" asp-append-version="true"></script>
-    }
 }

@@ -32,18 +32,10 @@ public class ItemSearchService(
                 {
                     var user = await userRepository.GetUserAsync();
                     if (user != null)
-                    {
                         result = allFound.Where(x => x.Published && user.FavoritedItemsId.Contains(x.Id)).ToList();
-                    }
                 }
-                else if (onlyMine)
-                {
-                    result = allFound.Where(x => x.Creator == userContext.Login).ToList();
-                }
-                else
-                {
-                    result = allFound.Where(x => x.Published).ToList();
-                }
+                else if (onlyMine) result = allFound.Where(x => x.Creator == userContext.Login).ToList();
+                else result = allFound.Where(x => x.Published).ToList();
                 return result;
             }
             catch
@@ -52,11 +44,15 @@ public class ItemSearchService(
             }
         }
         // Fallback — поиск средствами БД
-        var itemsFromDb = itemRepository.AllItems().AsQueryable();
-        itemsFromDb = onlyMine 
-            ? itemsFromDb.Where(x => x.Creator == userContext.Login) 
-            : itemsFromDb.Where(x => x.Published);
-
+        var itemsFromDb = itemRepository.AllItems().OrderByDescending(x=> x.Views).AsQueryable();
+        if (favorite)
+        {
+            var user = await userRepository.GetUserAsync();
+            if (user != null)
+                itemsFromDb = itemsFromDb.Where(x => x.Published && user.FavoritedItemsId.Contains(x.Id));
+        }
+        else if (onlyMine) itemsFromDb = itemsFromDb.Where(x => x.Creator == userContext.Login);
+        else itemsFromDb = itemsFromDb.Where(x => x.Published);
         // Псевдо-поиск:
         if (!string.IsNullOrWhiteSpace(query))
         {

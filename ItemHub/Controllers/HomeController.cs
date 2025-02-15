@@ -38,10 +38,9 @@ public class HomeController(IPageManagerService pageManagerService) : Controller
     
     [Route("favorite")]
     [Authorize(Roles = UserRoles.CUSTOMER)]
-    public async Task<IActionResult> FavoritedItems(int? page)
+    public async Task<IActionResult> FavoritedItems()
     {
-        var viewModel = await pageManagerService.FavoritedItems(page);
-        return View(viewModel);
+        return View();
     }
     
     public IActionResult Privacy() => View();

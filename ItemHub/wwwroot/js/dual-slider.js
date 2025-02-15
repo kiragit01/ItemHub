@@ -66,18 +66,18 @@ function fillSlider(from, to, sliderColor, rangeColor, controlSlider) {
 }
 
 function setToggleAccessible(currentTarget) {
-    const toSlider = document.querySelector('#toSlider');
-    if (Number(currentTarget.value) <= 0 ) {
-        toSlider.style.zIndex = 2;
-    } else {
-        toSlider.style.zIndex = 0;
-    }
+    // const toSlider = document.querySelector('#toSlider');
+    // if (Number(currentTarget.value) <= 0 ) {
+    //     toSlider.style.zIndex = 2;
+    // } else {
+    //     toSlider.style.zIndex = 0;
+    // }
 }
 
-const fromSlider = document.querySelector('#fromSlider');
-const toSlider = document.querySelector('#toSlider');
-const fromInput = document.querySelector('#fromInput');
-const toInput = document.querySelector('#toInput');
+const fromSlider = document.querySelector('#slider-left');
+const toSlider = document.querySelector('#slider-right');
+const fromInput = document.querySelector('#minPrice');
+const toInput = document.querySelector('#maxPrice');
 fillSlider(fromSlider, toSlider, '#C6C6C6', '#25daa5', toSlider);
 setToggleAccessible(toSlider);
 

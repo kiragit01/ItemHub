@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("productsLoaded", function () {
     document.querySelectorAll(".published").forEach(function (button) {
         const card = button.closest(".row")
         const unpublished = '<div ' +

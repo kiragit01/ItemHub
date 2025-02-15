@@ -16,58 +16,25 @@ public class ItemApiController(
     ILogger<ItemApiController> logger)
     : ControllerBase
 {
-    // GET: api/items/favorites/count
-    [HttpGet("favorites/count")]
-    [Authorize(Roles = UserRoles.CUSTOMER)]
-    public async Task<IActionResult> GetFavoritesCount()
-    {
-        try
-        {
-            var count = await userApiService.GetFavoritedItemsCountAsync();
-            return Ok(new { Count = count });
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Ошибка при получении количества избранных товаров.");
-            return StatusCode(500, "Внутренняя ошибка сервера.");
-        }
-    }
 
-    // GET: api/items/favorites
-    [HttpGet("favorites")]
+    // POST: api/items/favorites/batch
+    [HttpPost("favorites/batch")]
     [Authorize(Roles = UserRoles.CUSTOMER)]
-    public async Task<IActionResult> GetFavoritedItems()
+    public async Task<IActionResult> ToggleFavoriteItem([FromBody] BatchFavoriteRequest request)
     {
-        try
+        if (request == null || request.Favorites == null)
         {
-            var items = await userApiService.GetFavoritedItemsAsync();
-            return Ok(items);
+            return BadRequest("Нет данных для обновления.");
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Ошибка при получении списка избранных товаров.");
-            return StatusCode(500, "Внутренняя ошибка сервера.");
-        }
-    }
-
-    // POST: api/items/{id}/favorite
-    [HttpPost("{id:guid}/favorite")]
-    [Authorize(Roles = UserRoles.CUSTOMER)]
-    public async Task<IActionResult> ToggleFavoriteItem(Guid id)
-    {
-        if (id == Guid.Empty)
-            return BadRequest("Некорректный идентификатор товара.");
 
         try
         {
-            var result = await userApiService.ToggleFavoriteItemAsync(id);
-            if (result.IsSuccess)
-                return Ok(new { IsFavorited = result.Value });
-            return NotFound(result.ErrorMessage);
+            await userApiService.UpdateFavoritesItemAsync(request.Favorites);
+            return Ok();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Ошибка при обновлении статуса избранного товара.");
+            logger.LogError(ex, "Ошибка при пакетном обновлении избранных товаров.");
             return StatusCode(500, "Внутренняя ошибка сервера.");
         }
     }
@@ -135,4 +102,9 @@ public class ItemApiController(
             return StatusCode(500, "Внутренняя ошибка сервера.");
         }
     }
+}
+public class BatchFavoriteRequest
+{
+    // Список идентификаторов товаров, которые должны быть в избранном.
+    public List<Guid> Favorites { get; set; }
 }
