@@ -7,16 +7,16 @@
 <div class="text-center mb-lg-4">
     @if (User.Identity!.IsAuthenticated)
     {
-        <h1 class="display-4">Welcome, @User.Identity.Name</h1>
+        <h1 class="display-4">Добро пожаловать, @User.Identity.Name</h1>
     }
     else
     {
-        <h1 class="display-4">Welcome</h1>
+        <h1 class="display-4">Добро пожаловать</h1>
     }
     @if (User.IsInRole("SELLER"))
     {
         <div class="h4"> 
-            <a asp-action="Create" asp-controller="Item" class="btn btn-primary" >Create Item</a>
+            <a asp-action="Create" asp-controller="Item" class="btn btn-primary" >Добавить новый товар</a>
         </div>
     }
     <div class="col-md-8 m-auto">
@@ -28,10 +28,10 @@
             </button>
         </div>
         <div class="d-flex">
-            <div class="col">
+            <div class="col mt-1">
                 <label>Цена</label>
                 <!-- Двойной ползунок -->
-                <div class="slider-container mb-4 text-start">
+                <div class="slider-container mb-2 text-start">
                     <div class="slider-track"></div>
                     <input type="range" id="slider-left" min="0" max="100" value="0" class="slider">
                     <input type="range" id="slider-right" min="0" max="100" value="100" class="slider">
@@ -43,7 +43,7 @@
                 </div>
             </div>
             <div class="col">
-                <div class="d-flex justify-content-between"> тест </div>
+                @* <div class="d-flex justify-content-between"> тест </div> *@
             </div>
         </div>
     </div>
